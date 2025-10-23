@@ -10,6 +10,7 @@
 
 from flask import Flask, render_template
 from bracket_logic import evaluate_and_finalize_game, live_owner_leader_vs_spread
+import click
 from models import db, Game
 import os
 
@@ -34,6 +35,50 @@ def create_app():
     #   (Must be run from the project directory with the venv active)
     # --------------------------------------------
     @app.cli.command("eval-game")
+    # --------------------------------------------
+    # CLI: Mark a game Final with scores, then evaluate
+    # Usage examples:
+    #   flask mark-final --id 1 --t1 81 --t2 80
+    #   flask --app app.py mark-final --id 3 --t1 70 --t2 75
+    #
+    # Notes:
+    # - This is for local/dev use (quick testing).
+    # - It will set status="Final", write scores, and run the spread logic.
+    # --------------------------------------------
+    @app.cli.command("mark-final")
+    @click.option("--id", "game_id", required=True, type=int, help="Game ID to finalize")
+    @click.option("--t1", "team1_score", required=True, type=int, help="Team 1 score")
+    @click.option("--t2", "team2_score", required=True, type=int, help="Team 2 score")
+    def mark_final_cmd(game_id: int, team1_score: int, team2_score: int):
+        """Dev helper: set a game's status/scores to Final, then evaluate the result."""
+        from models import Game
+
+        with app.app_context():
+            game = db.session.get(Game, game_id)
+            if not game:
+                click.echo(f"❌ Game {game_id} not found.")
+                return
+
+            # 1) Write scores and mark as Final
+            game.team1_score = team1_score
+            game.team2_score = team2_score
+            game.status = "Final"
+            db.session.commit()
+
+            # 2) Evaluate (fills winner_id and returns owner winner)
+            try:
+                team_winner, owner_winner = evaluate_and_finalize_game(game.id)
+            except Exception as ex:
+                click.echo(f"❌ Error evaluating game {game_id}: {ex}")
+                return
+
+            # 3) Print a nice summary
+            click.echo(
+                f"✅ Game {game.id} marked Final: {game.team1.name} {team1_score} – {team2_score} {game.team2.name}")
+            click.echo(f"   Actual team winner: {team_winner.name}")
+            click.echo(
+                f"   Owner winner (vs spread): {owner_winner.name if owner_winner else 'Unknown'}")
+
     def eval_game_cmd():
         """
         Dev-only helper:
