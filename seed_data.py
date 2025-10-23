@@ -10,7 +10,8 @@
 
 from app import create_app
 from models import db, Team, Game, Participant
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
 
 def reset_and_seed():
     app = create_app()
@@ -64,7 +65,7 @@ def reset_and_seed():
         # 4) Create a few Round-of-64 games (2 per region)
         # NOTE: We’ll keep spreads small and attach a favorite so the template can render "X -N"
         #       Times are fake now; later we’ll wire these to real schedule data.
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         games_to_create = [
             # East region games
             {
@@ -134,6 +135,7 @@ def reset_and_seed():
 
         db.session.commit()
         print("✅ Seed complete: inserted Participants, Teams, and Games.")
+
 
 if __name__ == "__main__":
     reset_and_seed()
