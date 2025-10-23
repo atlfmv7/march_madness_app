@@ -9,6 +9,7 @@
 # -------------------------------
 
 from flask import Flask, render_template
+from models import db
 import os
 
 def create_app():
@@ -21,6 +22,8 @@ def create_app():
 
     # Load configuration (safe defaults now; we’ll expand in later steps)
     app.config.from_object("config.Config")
+      # Initialize SQLAlchemy with the app
+    db.init_app(app)
 
     @app.route("/")
     def home():
@@ -30,9 +33,13 @@ def create_app():
         - Later, this will show current year bracket, owners, and spreads
         """
         # Pass a tiny bit of sample data to prove templating works
-        sample_message = "Your Flask template is wired up and working."
+        sample_message = "Database connection initialized successfully!"
         return render_template("index.html", message=sample_message)
 
+    # Create tables if not existing
+    with app.app_context():
+        db.create_all()
+        
     return app
 
 # Only run the dev server if this file is executed directly (not when imported by tests/tools).
