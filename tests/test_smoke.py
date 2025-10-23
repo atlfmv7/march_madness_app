@@ -8,6 +8,7 @@
 import pytest
 from app import create_app
 
+
 @pytest.fixture
 def client():
     app = create_app()
@@ -15,8 +16,11 @@ def client():
     with app.test_client() as client:
         yield client
 
+
 def test_home_route_loads(client):
     resp = client.get("/")
     assert resp.status_code == 200
-    # Check that our Step 2 marker text appears
-    assert b"Project Skeleton: Step 2" in resp.data
+    # Brand/title should be stable across steps.
+    assert b"March Madness Madness" in resp.data
+    # The page renders a table header for seeded games.
+    assert b"Round of" in resp.data
