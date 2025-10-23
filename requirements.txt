@@ -1,0 +1,4 @@
+# requirements.txt
+# Pin core deps now; we’ll add more (e.g., requests, SQLAlchemy) as needed in later steps.
+Flask==3.0.3
+pytest==8.3.2
