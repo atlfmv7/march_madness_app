@@ -7,52 +7,117 @@
   - Using Bootstrap via CDN for quick, mobile-friendly styling
   - Shows an example message passed from the Flask route
 -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  />
-  <title>March Madness Madness</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>March Madness Madness</title>
 
-  <!-- Bootstrap for quick, clean defaults (optional but helpful) -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-    crossorigin="anonymous"
-  />
+    <!-- Bootstrap for quick, clean defaults (optional but helpful) -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
 
-  <!-- Our tiny stylesheet (safe to keep empty for now) -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-</head>
-<body class="bg-light">
-  <nav class="navbar navbar-dark bg-dark">
-    <div class="container">
-      <span class="navbar-brand mb-0 h1">March Madness Madness</span>
-    </div>
-  </nav>
-
-  <main class="container py-4">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h1 class="h4">Project Skeleton: Step 2</h1>
-        <p class="text-muted mb-3">
-          If you can read this, your template rendering is working.
-        </p>
-        <div class="alert alert-primary">
-          {{ message }}
-        </div>
-        <p class="mb-0">
-          Next steps will add real data, pages, and logic.
-        </p>
+    <!-- Our tiny stylesheet (safe to keep empty for now) -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark">
+      <div class="container">
+        <span class="navbar-brand mb-0 h1">March Madness Madness</span>
       </div>
-    </div>
-  </main>
+    </nav>
 
-  <!-- Optional JS (we’ll use this later for auto-refresh, etc.) -->
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
-</body>
+    <main class="container py-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="h4 mb-0">March Madness Madness</h1>
+        <span class="badge text-bg-secondary">Step 4: Seeded Data</span>
+      </div>
+
+      {% if message %}
+      <div class="alert alert-primary">{{ message }}</div>
+      {% endif %} {% if grouped %}
+      <!-- Iterate regions (East/West for our seed) -->
+      {% for region, rounds in grouped.items() %}
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header"><strong>Region:</strong> {{ region }}</div>
+        <div class="card-body">
+          <!-- Iterate rounds inside each region -->
+          {% for round_label, games in rounds.items() %}
+          <h2 class="h6 text-uppercase text-muted">
+            Round of {{ round_label }}
+          </h2>
+          <div class="table-responsive mb-3">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th style="width: 35%">Team 1</th>
+                  <th style="width: 35%">Team 2</th>
+                  <th style="width: 15%">Spread</th>
+                  <th style="width: 15%">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for g in games %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">
+                      {{ g.team1.name }}
+                      <span class="text-muted">(Seed {{ g.team1.seed }})</span>
+                    </div>
+                    <div class="text-muted small">
+                      Owner: {{ g.team1_owner.name if g.team1_owner else "—" }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">
+                      {{ g.team2.name }}
+                      <span class="text-muted">(Seed {{ g.team2.seed }})</span>
+                    </div>
+                    <div class="text-muted small">
+                      Owner: {{ g.team2_owner.name if g.team2_owner else "—" }}
+                    </div>
+                  </td>
+                  <td>
+                    {% if g.spread_label() %}
+                    <span class="badge text-bg-info"
+                      >{{ g.spread_label() }}</span
+                    >
+                    {% else %}
+                    <span class="text-muted">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge text-bg-light">{{ g.status }}</span>
+                    {% if g.score_label() %}
+                    <div class="small text-muted">
+                      Score: {{ g.score_label() }}
+                    </div>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %} {% else %}
+      <div class="alert alert-warning">
+        No games found. Did you run <code>python seed_data.py</code>?
+      </div>
+      {% endif %}
+    </main>
+
+    <!-- Optional JS (we’ll use this later for auto-refresh, etc.) -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
 </html>
