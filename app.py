@@ -20,7 +20,7 @@ from datetime import datetime, date, timezone
 from typing import Dict
 
 import click
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for
 
 from bracket_logic import evaluate_and_finalize_game, live_owner_leader_vs_spread
 from data_fetchers.scores import update_game_scores
@@ -119,6 +119,20 @@ def create_app() -> Flask:
         db.create_all()
 
     # ----- CLI Commands -----
+    @app.context_processor
+    def inject_year_helpers():
+        """
+        Adds url_with_year() to Jinja:
+        - Behaves like url_for(), but ensures the current ?year=... sticks
+            unless you explicitly pass a different year.
+        """
+        def url_with_year(endpoint, **values):
+            # Prefer explicitly provided year, else take it from the current query string
+            year = values.pop("year", request.args.get("year"))
+            if year:
+                values["year"] = year
+            return url_for(endpoint, **values)
+        return dict(url_with_year=url_with_year)
 
     @app.cli.command("eval-game")
     def eval_game_cmd():
