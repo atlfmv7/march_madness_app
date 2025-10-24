@@ -1,11 +1,25 @@
 # seed_data.py
 # -------------------------------
-# One-time (or repeatable) script to populate the database with:
-# - 8 sample teams across two regions (East/West)
-# - 8 sample participants (P1..P8)
-# - 4 Round-of-64 games with owners assigned and simple spreads
+# Purpose:
+#   Seed (or reset and seed) the database with a compact demo bracket so you can
+#   verify the UI and bracket propagation logic end-to-end.
 #
-# You can safely run this multiple times; it clears existing data first.
+# What this script does:
+#   - Clears existing Participants, Teams, and Games (idempotent while iterating).
+#   - Creates 8 sample Participants (P1..P8).
+#   - Creates 8 sample Teams split across two regions (East/West) and assigns
+#     both initial and current owners round-robin so the UI has ownership data.
+#   - NEW: Creates two Round of 32 (r32) *skeleton* Game records (one per region).
+#     These have no teams yet; Round of 64 winners will auto-advance into these.
+#   - Creates four Round of 64 (r64) Game records (two per region) with spreads
+#     and favorites for simple rendering.
+#   - NEW: Links the four r64 games to their corresponding r32 game targets via
+#     next_game_id and next_game_slot so propagation is well-defined.
+#
+# Notes:
+#   - We commit once after creating r32 games to ensure they have primary keys,
+#     then create r64 games, set their next links, and commit again.
+#   - Times are synthetic for demonstration; replace with real schedule data later.
 # -------------------------------
 
 from app import create_app
@@ -16,13 +30,17 @@ from datetime import datetime, timedelta, timezone
 def reset_and_seed():
     app = create_app()
     with app.app_context():
+        # ------------------------------------------------------------
         # 1) Clear existing data to keep this script idempotent for now
+        # ------------------------------------------------------------
         db.session.query(Game).delete()
         db.session.query(Team).delete()
         db.session.query(Participant).delete()
         db.session.commit()
 
+        # ------------------------------------------------------------
         # 2) Create participants (P1..P8)
+        # ------------------------------------------------------------
         participants = []
         for i in range(1, 9):
             p = Participant(name=f"Participant {i}", email=None)
@@ -30,8 +48,11 @@ def reset_and_seed():
         db.session.add_all(participants)
         db.session.commit()
 
+        # ------------------------------------------------------------
         # 3) Create teams (8 teams, 4 East and 4 West for a compact demo)
-        # In the real tournament there are 64 teams, but this is perfect for verifying the UI.
+        #    In the real tournament there are 64 teams, but this is perfect
+        #    for verifying the UI and propagation logic.
+        # ------------------------------------------------------------
         teams_data = [
             # East region (names are just examples)
             {"name": "Duke", "seed": 2, "region": "East"},
@@ -53,18 +74,37 @@ def reset_and_seed():
                 seed=td["seed"],
                 region=td["region"],
                 initial_owner_id=owner.id,
-                current_owner_id=owner.id
+                current_owner_id=owner.id,
             )
             teams.append(t)
         db.session.add_all(teams)
         db.session.commit()
 
-        # Map names -> Team for convenience
+        # Convenience map for later lookups
         team_by_name = {t.name: t for t in teams}
 
-        # 4) Create a few Round-of-64 games (2 per region)
-        # NOTE: We’ll keep spreads small and attach a favorite so the template can render "X -N"
-        #       Times are fake now; later we’ll wire these to real schedule data.
+        # ------------------------------------------------------------
+        # 4) NEW: Create Round of 32 skeleton games (one per region)
+        #    We commit here to ensure these games have IDs so r64 games
+        #    can point their next_game_id to these records.
+        # ------------------------------------------------------------
+        r32_east = Game(
+            round="32",
+            region="East",
+            status="Scheduled",
+            # team1_id/team2_id will be filled by r64 winners via propagation
+        )
+        r32_west = Game(
+            round="32",
+            region="West",
+            status="Scheduled",
+        )
+        db.session.add_all([r32_east, r32_west])
+        db.session.commit()  # ensure r32_east.id / r32_west.id exist
+
+        # ------------------------------------------------------------
+        # 5) Create Round of 64 games (2 per region) with simple spreads
+        # ------------------------------------------------------------
         now = datetime.now(timezone.utc)
         games_to_create = [
             # East region games
@@ -77,7 +117,7 @@ def reset_and_seed():
                 "team2_owner": team_by_name["Kentucky"].current_owner,
                 "spread": 6.5,
                 "favorite": "UConn",
-                "game_time": now + timedelta(days=1)
+                "game_time": now + timedelta(days=1),
             },
             {
                 "round": "64",
@@ -88,7 +128,7 @@ def reset_and_seed():
                 "team2_owner": team_by_name["UNC"].current_owner,
                 "spread": 4.5,
                 "favorite": "Duke",
-                "game_time": now + timedelta(days=1, hours=2)
+                "game_time": now + timedelta(days=1, hours=2),
             },
             # West region games
             {
@@ -100,7 +140,7 @@ def reset_and_seed():
                 "team2_owner": team_by_name["Baylor"].current_owner,
                 "spread": 5.0,
                 "favorite": "Arizona",
-                "game_time": now + timedelta(days=1, hours=4)
+                "game_time": now + timedelta(days=1, hours=4),
             },
             {
                 "round": "64",
@@ -111,10 +151,11 @@ def reset_and_seed():
                 "team2_owner": team_by_name["Kansas"].current_owner,
                 "spread": 2.5,
                 "favorite": "Gonzaga",
-                "game_time": now + timedelta(days=1, hours=6)
+                "game_time": now + timedelta(days=1, hours=6),
             },
         ]
 
+        # Add (but don't commit yet) so we can set next_game links first
         for g in games_to_create:
             t1 = team_by_name[g["team1"]]
             t2 = team_by_name[g["team2"]]
@@ -133,8 +174,38 @@ def reset_and_seed():
             )
             db.session.add(game)
 
+        # ------------------------------------------------------------
+        # 6) Link Round of 64 games to their Round of 32 targets
+        #    Assumption for compact demo:
+        #      - The two East r64 games feed into r32_east (slots 1 and 2)
+        #      - The two West r64 games feed into r32_west (slots 1 and 2)
+        #    We order by region then id; since we added East first, we expect
+        #    [East A, East B, West A, West B].
+        # ------------------------------------------------------------
+        db.session.flush()  # ensure pending r64 games get IDs for ordering
+        r64_games = (
+            db.session.query(Game)
+            .filter_by(round="64")
+            .order_by(Game.region.asc(), Game.id.asc())
+            .all()
+        )
+
+        if len(r64_games) == 4:
+            # East
+            r64_games[0].next_game_id = r32_east.id
+            r64_games[0].next_game_slot = 1
+            r64_games[1].next_game_id = r32_east.id
+            r64_games[1].next_game_slot = 2
+
+            # West
+            r64_games[2].next_game_id = r32_west.id
+            r64_games[2].next_game_slot = 1
+            r64_games[3].next_game_id = r32_west.id
+            r64_games[3].next_game_slot = 2
+
+        # Finalize all inserts/updates
         db.session.commit()
-        print("✅ Seed complete: inserted Participants, Teams, and Games.")
+        print("✅ Seed complete: inserted Participants, Teams, r32 skeleton Games, r64 Games, and set next links.")
 
 
 if __name__ == "__main__":

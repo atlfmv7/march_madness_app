@@ -95,15 +95,14 @@ def actual_game_winner_team(game: Game) -> Team:
             "A tie score was encountered, which is unexpected for NCAA games.")
 
 
+# bracket_logic.py (additions)
+
 def evaluate_and_finalize_game(game_id: int) -> Tuple[Team, Participant]:
     """
     Evaluate a FINAL game's result and update its 'winner_id' field.
+    Also propagates advancing team and owner to the next round if linked.
     Returns:
       (actual_winner_team, owner_winner_participant)
-
-    NOTE:
-      This function persists the updated 'winner_id' to the DB but does NOT
-      propagate to any 'next round' game (that linkage will be added later).
     """
     game: Game = db.session.get(Game, game_id)
     if not game:
@@ -112,7 +111,6 @@ def evaluate_and_finalize_game(game_id: int) -> Tuple[Team, Participant]:
         raise SpreadEvaluationError(
             "Game must be marked Final before evaluation.")
 
-    # Compute actual team winner & owner winner
     team_winner = actual_game_winner_team(game)
     owner_winner = determine_owner_winner_vs_spread(game)
 
@@ -120,7 +118,42 @@ def evaluate_and_finalize_game(game_id: int) -> Tuple[Team, Participant]:
     game.winner_id = team_winner.id
     db.session.commit()
 
+    # 🔗 NEW: propagate to next round if this game feeds another
+    propagate_to_next_round(game, team_winner, owner_winner)
+
     return team_winner, owner_winner
+
+
+def propagate_to_next_round(game: Game, team_winner: Team, owner_winner: Participant) -> None:
+    """
+    Push the actual team winner into the next game's correct slot,
+    and assign the 'owner vs spread' as that team's current owner.
+    - next_game_slot == 1 -> fill next_game.team1_id + team1_owner_id
+    - next_game_slot == 2 -> fill next_game.team2_id + team2_owner_id
+    Also updates the advancing Team.current_owner_id to owner_winner.id
+    """
+    if not game.next_game_id or not game.next_game_slot:
+        return  # nothing to do
+
+    next_game = db.session.get(Game, game.next_game_id)
+    if not next_game:
+        return
+
+    # Update the advancing team's *current* owner record
+    team_winner.current_owner_id = owner_winner.id
+
+    # Place advancing team into the next game slot, with the spread-winner as owner
+    if game.next_game_slot == 1:
+        next_game.team1_id = team_winner.id
+        next_game.team1_owner_id = owner_winner.id
+    elif game.next_game_slot == 2:
+        next_game.team2_id = team_winner.id
+        next_game.team2_owner_id = owner_winner.id
+    else:
+        # ignore unexpected slot values
+        return
+
+    db.session.commit()
 
 
 def live_owner_leader_vs_spread(game: Game) -> Optional[Participant]:
