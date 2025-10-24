@@ -10,11 +10,11 @@ import os
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, "instance")
 
+
 class Config:
     # Later we’ll set a proper SQLite path (e.g., instance folder).
     # For now we leave placeholders to keep things simple.
     SECRET_KEY = os.environ.get("MMM_SECRET_KEY", "dev-key-not-for-production")
-
 
     # Ensure instance directory exists
     os.makedirs(INSTANCE_DIR, exist_ok=True)
@@ -23,8 +23,16 @@ class Config:
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(INSTANCE_DIR, 'mmm.db')}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Example placeholders for future steps:
-    # DATABASE_URI = os.environ.get("MMM_DATABASE_URI", "sqlite:///mmm.db")
-    # ODDS_API_KEY = os.environ.get("MMM_ODDS_API_KEY", "")
-    # SCORE_API_SOURCE = os.environ.get("MMM_SCORE_API_SOURCE", "ncaa")
+    # -------------------------------
+    # Provider configuration
+    # ODDS_API_PROVIDER: "the_odds_api" or "custom"
+    # SCORES_SOURCE: "ncaa" or "custom"
+    # Keys loaded from env to avoid hard-coding secrets.
+    # -------------------------------
+    ODDS_API_PROVIDER = os.environ.get("MMM_ODDS_API_PROVIDER", "the_odds_api")
+    ODDS_API_KEY = os.environ.get("MMM_ODDS_API_KEY", "")
 
+    SCORES_SOURCE = os.environ.get("MMM_SCORES_SOURCE", "ncaa")
+    SCORES_API_KEY = os.environ.get("MMM_SCORES_API_KEY", "")
+
+    # Region filtering, request cadence, etc., can be added later as needed.

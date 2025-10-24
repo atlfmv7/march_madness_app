@@ -10,6 +10,9 @@
 
 from flask import Flask, render_template
 from bracket_logic import evaluate_and_finalize_game, live_owner_leader_vs_spread
+from data_fetchers.spreads import update_game_spreads
+from data_fetchers.scores import update_game_scores
+import datetime as dt
 import click
 from models import db, Game
 import os
@@ -46,6 +49,40 @@ def create_app():
     # - It will set status="Final", write scores, and run the spread logic.
     # --------------------------------------------
     @app.cli.command("mark-final")
+    # --------------------------------------------
+    # CLI: Fetch spreads for a specific date (default: today)
+    # Usage:
+    #   flask get-spreads
+    #   flask get-spreads --date 2025-03-21
+    # --------------------------------------------
+    @app.cli.command("get-spreads")
+    @click.option("--date", "date_str", required=False, help="YYYY-MM-DD (defaults to today in UTC)")
+    def get_spreads_cmd(date_str: str):
+        if date_str:
+            y, m, d = map(int, date_str.split("-"))
+            target_date = dt.date(y, m, d)
+        else:
+            target_date = dt.datetime.utcnow().date()
+        count = update_game_spreads(target_date)
+        click.echo(
+            f"✅ Spreads updated for {target_date.isoformat()}: {count} game(s).")
+
+    # --------------------------------------------
+    # CLI: Update scores (and finalize games) for a date (default: today)
+    # Usage:
+    #   flask update-scores
+    #   flask update-scores --date 2025-03-21
+    # --------------------------------------------
+    @app.cli.command("update-scores")
+    @click.option("--date", "date_str", required=False, help="YYYY-MM-DD (defaults to today in UTC)")
+    def update_scores_cmd(date_str: str):
+        if date_str:
+            iso = date_str
+        else:
+            iso = dt.datetime.utcnow().date().isoformat()
+        count = update_game_scores(date_iso=iso)
+        click.echo(f"✅ Scores updated for {iso}: {count} game(s).")
+
     @click.option("--id", "game_id", required=True, type=int, help="Game ID to finalize")
     @click.option("--t1", "team1_score", required=True, type=int, help="Team 1 score")
     @click.option("--t2", "team2_score", required=True, type=int, help="Team 2 score")
