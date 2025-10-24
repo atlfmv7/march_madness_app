@@ -3,6 +3,15 @@
 # Flask application entry point and CLI commands.
 # This version consolidates imports, standardizes timezone-aware dates,
 # and avoids redundant logic. It uses the app-factory pattern.
+#
+# Why this file exists and what it does:
+#   - Creates and configures the Flask app (via create_app).
+#   - Initializes the database and provides routes and CLI helpers.
+#   - Renders the homepage, showing games grouped by region/round.
+#   - NEW: Supports selecting a tournament 'year' (via querystring ?year=YYYY),
+#           defaults to the most recent year in the DB (or current UTC year when none).
+#           Filters displayed games to the selected year, and provides a list of
+#           available years for a dropdown in the template.
 # -------------------------------
 
 from __future__ import annotations
@@ -11,7 +20,7 @@ from datetime import datetime, date, timezone
 from typing import Dict
 
 import click
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 
 from bracket_logic import evaluate_and_finalize_game, live_owner_leader_vs_spread
 from data_fetchers.scores import update_game_scores
@@ -46,13 +55,37 @@ def create_app() -> Flask:
     def home():
         """
         Homepage:
-        - Loads games from the database.
+        - Loads games for a selected year (default: latest available).
         - Computes the live 'leader vs spread' for in-progress games.
         - Groups the games by region and round for simple rendering.
+
+        How 'year' works:
+        - We look up all distinct Game.year values in ascending order to build a year list.
+        - If no games exist yet, we fall back to the current UTC year.
+        - If a 'year' query parameter is provided (e.g., /?year=2025), we attempt to use it;
+          otherwise we default to the most recent year available in the DB.
+        - We then filter the games query to only include the selected year.
         """
-        # ORDER: region asc, round asc (string), id asc for stability
+        # Build a sorted list of available years from the DB, e.g. [2024, 2025].
+        years = [y for (y,) in db.session.query(
+            Game.year).distinct().order_by(Game.year.asc()).all()]
+
+        # Choose a default year: latest found in DB, or current UTC year if no data yet.
+        if years:
+            default_year = years[-1]  # latest
+        else:
+            default_year = datetime.now(timezone.utc).year
+
+        # Parse the incoming ?year=YYYY, falling back to default_year on missing/invalid.
+        try:
+            selected_year = int(request.args.get("year", default_year))
+        except ValueError:
+            selected_year = default_year
+
+        # ORDER: region asc, round asc (string), id asc for stability; filter by year.
         games = (
             Game.query
+            .filter(Game.year == selected_year)
             .order_by(Game.region.asc(), Game.round.asc(), Game.id.asc())
             .all()
         )
@@ -75,8 +108,10 @@ def create_app() -> Flask:
 
         return render_template(
             "index.html",
-            message="Loaded games from database.",
-            grouped=grouped
+            message=f"Loaded games for {selected_year}.",
+            grouped=grouped,
+            years=years,
+            selected_year=selected_year,
         )
 
     # Create tables once at startup (safe no-op if already exist)
@@ -153,8 +188,7 @@ def create_app() -> Flask:
                 return
 
             click.echo(
-                f"✅ Game {game.id} marked Final: "
-                f"{game.team1.name} {team1_score} – {team2_score} {game.team2.name}"
+                f"✅ Game {game.id} marked Final: {game.team1.name} {team1_score} – {team2_score} {game.team2.name}"
             )
             click.echo(f"   Actual team winner: {team_winner.name}")
             click.echo(

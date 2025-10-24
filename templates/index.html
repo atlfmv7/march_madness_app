@@ -1,11 +1,11 @@
 <!-- templates/index.html -->
 <!--
   Purpose:
-  - Prove Jinja rendering works
-  - Provide a simple, clean layout we’ll enhance later
+  - Render the home page with games grouped by region and round.
+  - Provide a compact year selector to filter the view by tournament year.
   Notes:
-  - Using Bootstrap via CDN for quick, mobile-friendly styling
-  - Shows an example message passed from the Flask route
+  - Uses Bootstrap via CDN for quick, mobile-friendly styling.
+  - The year dropdown submits a GET form to reload the page with ?year=YYYY.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -36,14 +36,30 @@
     </nav>
 
     <main class="container py-4">
+      <!-- Header + Year Selector (compact, submits via GET) -->
       <div class="d-flex align-items-center justify-content-between mb-3">
-        <h1 class="h4 mb-0">March Madness Madness</h1>
-        <span class="badge text-bg-secondary">Step 4: Seeded Data</span>
+        <div>
+          <h1 class="h4 mb-0">March Madness Madness</h1>
+          {% if message %}<div class="text-muted small">{{ message }}</div>{% endif %}
+        </div>
+
+        <!-- Year selector -->
+        <form method="get" class="d-flex align-items-center gap-2">
+          <label for="year" class="form-label mb-0 me-2">Year:</label>
+          <select id="year" name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+            {% if years %}
+              {% for y in years %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            {% else %}
+              <option value="{{ selected_year }}" selected>{{ selected_year }}</option>
+            {% endif %}
+          </select>
+          <noscript><button class="btn btn-sm btn-primary" type="submit">Go</button></noscript>
+        </form>
       </div>
 
-      {% if message %}
-      <div class="alert alert-primary">{{ message }}</div>
-      {% endif %} {% if grouped %}
+      {% if grouped %}
       <!-- Iterate regions (East/West for our seed) -->
       {% for region, rounds in grouped.items() %}
       <div class="card mb-4 shadow-sm">
@@ -88,9 +104,7 @@
                   </td>
                   <td>
                     {% if g.spread_label() %}
-                    <span class="badge text-bg-info"
-                      >{{ g.spread_label() }}</span
-                    >
+                    <span class="badge text-bg-info">{{ g.spread_label() }}</span>
                     {% else %}
                     <span class="text-muted">N/A</span>
                     {% endif %}
@@ -122,7 +136,8 @@
           {% endfor %}
         </div>
       </div>
-      {% endfor %} {% else %}
+      {% endfor %}
+      {% else %}
       <div class="alert alert-warning">
         No games found. Did you run <code>python seed_data.py</code>?
       </div>

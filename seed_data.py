@@ -9,17 +9,27 @@
 #   - Creates 8 sample Participants (P1..P8).
 #   - Creates 8 sample Teams split across two regions (East/West) and assigns
 #     both initial and current owners round-robin so the UI has ownership data.
-#   - NEW: Creates two Round of 32 (r32) *skeleton* Game records (one per region).
+#   - Creates two Round of 32 (r32) *skeleton* Game records (one per region).
 #     These have no teams yet; Round of 64 winners will auto-advance into these.
 #   - Creates four Round of 64 (r64) Game records (two per region) with spreads
 #     and favorites for simple rendering.
-#   - NEW: Links the four r64 games to their corresponding r32 game targets via
+#   - Links the four r64 games to their corresponding r32 game targets via
 #     next_game_id and next_game_slot so propagation is well-defined.
+#
+# NEW (Year tagging):
+#   - Adds a single source of truth for the current year (CURRENT_YEAR).
+#   - Sets `year=CURRENT_YEAR` on every Team and Game created here.
 #
 # Notes:
 #   - We commit once after creating r32 games to ensure they have primary keys,
 #     then create r64 games, set their next links, and commit again.
 #   - Times are synthetic for demonstration; replace with real schedule data later.
+# -------------------------------
+#
+# Why this file exists:
+#   This file exists to provide a reproducible way to reset and seed your local
+#   database with a minimal, but fully-linked tournament structure that exercises
+#   ownership, spreads, and automatic advancement logic across rounds.
 # -------------------------------
 
 from app import create_app
@@ -28,8 +38,25 @@ from datetime import datetime, timedelta, timezone
 
 
 def reset_and_seed():
+    """
+    Reset and seed the database with demo data for the bracket app.
+
+    Steps:
+      1) Wipe existing Participants, Teams, Games.
+      2) Create Participants (P1..P8).
+      3) Create Teams (8 total, 4 per region) and set `year`.
+      4) Create Round of 32 skeleton Games (one per region) and set `year`.
+      5) Create Round of 64 Games (two per region) and set `year`.
+      6) Link Round of 64 winners to their Round of 32 targets.
+      7) Commit.
+    """
     app = create_app()
     with app.app_context():
+        # ------------------------------------------------------------
+        # Single source of truth for the current tournament year
+        # ------------------------------------------------------------
+        CURRENT_YEAR = datetime.now(timezone.utc).year  # NEW
+
         # ------------------------------------------------------------
         # 1) Clear existing data to keep this script idempotent for now
         # ------------------------------------------------------------
@@ -52,6 +79,7 @@ def reset_and_seed():
         # 3) Create teams (8 teams, 4 East and 4 West for a compact demo)
         #    In the real tournament there are 64 teams, but this is perfect
         #    for verifying the UI and propagation logic.
+        #    NEW: year=CURRENT_YEAR
         # ------------------------------------------------------------
         teams_data = [
             # East region (names are just examples)
@@ -73,6 +101,7 @@ def reset_and_seed():
                 name=td["name"],
                 seed=td["seed"],
                 region=td["region"],
+                year=CURRENT_YEAR,                 # NEW
                 initial_owner_id=owner.id,
                 current_owner_id=owner.id,
             )
@@ -84,7 +113,8 @@ def reset_and_seed():
         team_by_name = {t.name: t for t in teams}
 
         # ------------------------------------------------------------
-        # 4) NEW: Create Round of 32 skeleton games (one per region)
+        # 4) Create Round of 32 skeleton games (one per region)
+        #    NEW: year=CURRENT_YEAR
         #    We commit here to ensure these games have IDs so r64 games
         #    can point their next_game_id to these records.
         # ------------------------------------------------------------
@@ -92,18 +122,21 @@ def reset_and_seed():
             round="32",
             region="East",
             status="Scheduled",
+            year=CURRENT_YEAR,  # NEW
             # team1_id/team2_id will be filled by r64 winners via propagation
         )
         r32_west = Game(
             round="32",
             region="West",
             status="Scheduled",
+            year=CURRENT_YEAR,  # NEW
         )
         db.session.add_all([r32_east, r32_west])
         db.session.commit()  # ensure r32_east.id / r32_west.id exist
 
         # ------------------------------------------------------------
         # 5) Create Round of 64 games (2 per region) with simple spreads
+        #    NEW: include "year": CURRENT_YEAR in each dict; pass to Game(...)
         # ------------------------------------------------------------
         now = datetime.now(timezone.utc)
         games_to_create = [
@@ -111,6 +144,7 @@ def reset_and_seed():
             {
                 "round": "64",
                 "region": "East",
+                "year": CURRENT_YEAR,  # NEW
                 "team1": "UConn",    # favored
                 "team2": "Kentucky",
                 "team1_owner": team_by_name["UConn"].current_owner,
@@ -122,6 +156,7 @@ def reset_and_seed():
             {
                 "round": "64",
                 "region": "East",
+                "year": CURRENT_YEAR,  # NEW
                 "team1": "Duke",     # favored
                 "team2": "UNC",
                 "team1_owner": team_by_name["Duke"].current_owner,
@@ -134,6 +169,7 @@ def reset_and_seed():
             {
                 "round": "64",
                 "region": "West",
+                "year": CURRENT_YEAR,  # NEW
                 "team1": "Arizona",  # favored
                 "team2": "Baylor",
                 "team1_owner": team_by_name["Arizona"].current_owner,
@@ -145,6 +181,7 @@ def reset_and_seed():
             {
                 "round": "64",
                 "region": "West",
+                "year": CURRENT_YEAR,  # NEW
                 "team1": "Gonzaga",  # favored
                 "team2": "Kansas",
                 "team1_owner": team_by_name["Gonzaga"].current_owner,
@@ -163,6 +200,7 @@ def reset_and_seed():
             game = Game(
                 round=g["round"],
                 region=g["region"],
+                year=g["year"],  # NEW ensure each has year set
                 team1_id=t1.id,
                 team2_id=t2.id,
                 team1_owner_id=g["team1_owner"].id if g["team1_owner"] else None,
@@ -205,7 +243,8 @@ def reset_and_seed():
 
         # Finalize all inserts/updates
         db.session.commit()
-        print("✅ Seed complete: inserted Participants, Teams, r32 skeleton Games, r64 Games, and set next links.")
+        print(
+            f"✅ Seed complete for {CURRENT_YEAR}: inserted Participants, Teams, r32 skeleton Games, r64 Games, and set next links.")
 
 
 if __name__ == "__main__":
