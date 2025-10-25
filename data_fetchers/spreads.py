@@ -9,11 +9,11 @@
 
 from typing import Dict, Any, List, Optional, Tuple
 import datetime as dt
-import requests
-
+from datetime import date, datetime, timezone
 from flask import current_app
 from models import db, Game, Team
-
+from util.name_map import to_canonical, normalize_key
+from providers.odds_api import fetch_spreads_for_date
 # ---------- Types ----------
 # Normalized spread entry structure returned by fetch_spreads_for_date():
 # {
@@ -27,61 +27,35 @@ from models import db, Game, Team
 SpreadEntry = Dict[str, Any]
 
 
-def _normalize_from_the_odds_api(raw: List[Dict[str, Any]]) -> List[SpreadEntry]:
+def _normalize_spreads_payload(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Convert The Odds API-like payload into our normalized structure.
-    NOTE: This function is based on typical shapes; adjust when wiring a real key.
+    Accepts either test-style payload:
+      {"team1": "...", "team2": "...", "favorite": "...", "spread": 6.5, "tip_time": "..."}
+    or provider-style payload:
+      {"home": "...", "away": "...", "favorite": "...", "spread": 6.5, "tip_iso": "..."}
+    Returns unified dicts with keys: home, away, favorite, spread, tip_iso
     """
-    out: List[SpreadEntry] = []
-    for game in raw:
-        teams = game.get("teams") or []            # e.g., ["UConn","Kentucky"]
-        if len(teams) != 2:
-            continue
-        home = game.get("home_team")               # may be one of teams[]
-        # Markets might contain spreads; pick the first available book for simplicity
-        bookmakers = game.get("bookmakers") or []
-        spread_points: Optional[float] = None
-        favorite: Optional[str] = None
-
-        for book in bookmakers:
-            markets = book.get("markets") or []
-            for m in markets:
-                if m.get("key") == "spreads":
-                    outcomes = m.get("outcomes") or []
-                    # Outcomes often look like [{"name":"UConn","point":-6.5}, {"name":"Kentucky","point":+6.5}]
-                    # We want favorite (negative) and absolute spread value as positive float
-                    fav_cand = None
-                    fav_pts = None
-                    for o in outcomes:
-                        name = o.get("name")
-                        point = o.get("point")
-                        if name is None or point is None:
-                            continue
-                        # negative point implies favorite at that book
-                        if isinstance(point, (int, float)) and point < 0:
-                            fav_cand = name
-                            fav_pts = abs(float(point))
-                    if fav_cand is not None and fav_pts is not None:
-                        favorite = fav_cand
-                        spread_points = fav_pts
-                        break
-            if spread_points is not None:
-                break
-
-        if spread_points is None or favorite is None:
-            # No usable spread; skip this game
-            continue
-
-        entry: SpreadEntry = {
-            "team1": teams[0],
-            "team2": teams[1],
-            "favorite": favorite,
-            "spread": float(spread_points),
-            # Optional fields if present:
-            "region": game.get("region"),  # many APIs won’t have this
-            "tip_time": game.get("commence_time"),  # often ISO8601
-        }
-        out.append(entry)
+    out: List[Dict[str, Any]] = []
+    for it in items or []:
+        if "home" in it or "away" in it:
+            home = it.get("home")
+            away = it.get("away")
+            tip_iso = it.get("tip_iso")
+        else:
+            # test-style keys
+            home = it.get("team1")
+            away = it.get("team2")
+            tip_iso = it.get("tip_time")
+        fav = it.get("favorite")
+        spr = it.get("spread")
+        if home and away and fav is not None and spr is not None:
+            out.append({
+                "home": str(home),
+                "away": str(away),
+                "favorite": str(fav),
+                "spread": float(spr),
+                "tip_iso": tip_iso,
+            })
     return out
 
 
@@ -126,58 +100,78 @@ def _match_team_by_name(session, name: str) -> Optional[Team]:
     return session.query(Team).filter(Team.name == name).first()
 
 
-def update_game_spreads(date: dt.date, data: Optional[List[SpreadEntry]] = None) -> int:
+def update_game_spreads(target_date: date, data: Optional[List[Dict[str, Any]]] = None) -> int:
     """
-    Update Game rows with spread and favorite team based on the given date.
-    - If 'data' is provided, uses it instead of fetching (great for tests).
-    - Returns the number of games updated.
-    Matching approach:
-      - Find the Game whose two team names match the entry’s teams (order-insensitive).
-      - Set Game.spread and Game.spread_favorite_team_id accordingly.
-      - Optionally set Game.game_time if tip_time is given.
+    Fetch spreads from live provider (if enabled) OR use injected `data` (for tests),
+    then update matching games for the given date/year. Returns # updated.
+    Safe-by-default: if disabled, no key, or empty data, returns 0.
     """
+    cfg = current_app.config
+
+    if data is not None:
+        payload = _normalize_spreads_payload(data)
+    else:
+        if not cfg.get("ENABLE_LIVE_SPREADS", True):
+            return 0
+        api_key = cfg.get("ODDS_API_KEY", "")
+        # tolerate provider signature variants robustly
+        try:
+            payload = fetch_spreads_for_date(target_date, api_key=api_key)
+        except TypeError:
+            # fallback if a local version lacks the named parameter
+            payload = fetch_spreads_for_date(
+                target_date)  # type: ignore[call-arg]
+
+    if not payload:
+        return 0
+
+    year = target_date.year
+    teams = db.session.query(Team).filter(Team.year == year).all()
+    by_name = {normalize_key(t.name): t for t in teams}
+
     updated = 0
-    if data is None:
-        data = fetch_spreads_for_date(date)
+    for item in payload:
+        home_name = to_canonical(item["home"])
+        away_name = to_canonical(item["away"])
+        fav_name = to_canonical(item["favorite"])
+        spread = float(item["spread"])
 
-    with current_app.app_context():
-        for entry in data:
-            t1 = _match_team_by_name(db.session, entry["team1"])
-            t2 = _match_team_by_name(db.session, entry["team2"])
-            if not t1 or not t2:
-                continue
+        home = by_name.get(normalize_key(home_name))
+        away = by_name.get(normalize_key(away_name))
+        favorite = by_name.get(normalize_key(fav_name))
+        if not home or not away or not favorite:
+            continue
 
-            # Find a game for these two teams (order-insensitive)
-            game = (
-                db.session.query(Game)
-                .filter(
-                    ((Game.team1_id == t1.id) & (Game.team2_id == t2.id))
-                    | ((Game.team1_id == t2.id) & (Game.team2_id == t1.id))
-                )
-                .first()
+        game = (
+            db.session.query(Game)
+            .filter(
+                Game.year == year,
+                Game.team1_id.in_([home.id, away.id]),
+                Game.team2_id.in_([home.id, away.id]),
             )
-            if not game:
-                continue
+            .order_by(Game.id.asc())
+            .first()
+        )
+        if not game:
+            continue
 
-            # Set spread and favorite
-            game.spread = float(entry["spread"])
-            favorite_name = entry["favorite"]
-            fav_team = t1 if t1.name == favorite_name else (t2 if t2.name == favorite_name else None)
-            if fav_team:
-                game.spread_favorite_team_id = fav_team.id
+        game.spread = spread
+        game.spread_favorite_team_id = favorite.id
 
-            # Optional: set tip time if provided in ISO8601
-            tip = entry.get("tip_time")
-            if tip:
-                try:
-                    # Basic parse; we don’t hard-require tz-awareness at this stage
-                    from datetime import datetime
-                    game.game_time = datetime.fromisoformat(tip.replace("Z", "+00:00"))
-                except Exception:
-                    pass
+        tip_iso = item.get("tip_iso")
+        if tip_iso:
+            try:
+                # Accept both "...Z" and "+00:00" forms
+                iso = tip_iso.replace("Z", "+00:00")
+                dt = datetime.fromisoformat(iso)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                game.game_time = dt
+            except Exception:
+                # Don't fail the whole update if time parsing hiccups
+                pass
 
-            updated += 1
+        updated += 1
 
-        db.session.commit()
-
+    db.session.commit()
     return updated

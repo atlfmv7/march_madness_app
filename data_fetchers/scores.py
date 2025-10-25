@@ -12,6 +12,9 @@ import requests
 from flask import current_app
 from models import db, Game, Team
 from bracket_logic import evaluate_and_finalize_game
+from util.name_map import to_canonical, normalize_key
+from providers.espn_scores import fetch_scores_for_iso_date
+from datetime import date
 
 # Normalized score entry:
 # {
@@ -82,48 +85,99 @@ def _match_game_for_pair(team1_name: str, team2_name: str) -> Optional[Game]:
     return game
 
 
-def update_game_scores(date_iso: Optional[str] = None, data: Optional[List[ScoreEntry]] = None) -> int:
+def update_game_scores(*, date_iso: str, data: Optional[List[Dict[str, Any]]] = None) -> int:
     """
-    Update Game rows with scores/status.
-    - If 'data' provided, use it.
-    - Else if date_iso provided, fetch for that date.
-    When a game transitions to Final, evaluate spread logic and persist winner_id.
-    Returns number of games that were updated.
+    Fetch scores from live provider (if enabled) OR use injected `data` for tests,
+    write them to DB, and evaluate Final games. Returns # updated.
+    Safe-by-default: if disabled or provider fails, returns 0.
     """
-    updated = 0
+    cfg = current_app.config
 
-    if data is None:
-        if not date_iso:
-            # Safe default: nothing to do
+    if data is not None:
+        payload = _normalize_scores_payload(data)
+    else:
+        if not cfg.get("ENABLE_LIVE_SCORES", True):
             return 0
-        data = fetch_scores_for_date_iso(date_iso)
+        payload = fetch_scores_for_iso_date(date_iso)
+        if not payload:
+            return 0
 
-    with current_app.app_context():
-        for entry in data:
-            team1 = entry["team1"]
-            team2 = entry["team2"]
-            game = _match_game_for_pair(team1, team2)
-            if not game:
-                continue
+    year = int(date_iso[:4])
+    teams = db.session.query(Team).filter(Team.year == year).all()
+    by_name = {normalize_key(t.name): t for t in teams}
 
-            # Apply scores/status when provided
-            if entry.get("score1") is not None:
-                game.team1_score = int(entry["score1"])
-            if entry.get("score2") is not None:
-                game.team2_score = int(entry["score2"])
-            if entry.get("status"):
-                game.status = entry["status"]
+    updated = 0
+    for item in payload:
+        home_name = to_canonical(item["home"])
+        away_name = to_canonical(item["away"])
+        home = by_name.get(normalize_key(home_name))
+        away = by_name.get(normalize_key(away_name))
+        if not home or not away:
+            continue
 
-            updated += 1
+        game = (
+            db.session.query(Game)
+            .filter(
+                Game.year == year,
+                Game.team1_id.in_([home.id, away.id]),
+                Game.team2_id.in_([home.id, away.id]),
+            )
+            .order_by(Game.id.asc())
+            .first()
+        )
+        if not game:
+            continue
 
-            # If Final, run evaluation (sets winner_id)
-            if game.status == "Final":
-                try:
-                    evaluate_and_finalize_game(game.id)
-                except Exception:
-                    # Keep going; don't break bulk updates on one bad game
-                    pass
-
+        # Apply score + status in the correct slot orientation
+        game.team1_score = item["home_score"] if game.team1_id == home.id else item["away_score"]
+        game.team2_score = item["away_score"] if game.team2_id == away.id else item["home_score"]
+        game.status = item["status"] or game.status
         db.session.commit()
 
+        if game.status == "Final":
+            try:
+                evaluate_and_finalize_game(game.id)
+            except Exception:
+                pass
+
+        updated += 1
+
     return updated
+
+
+def _normalize_scores_payload(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Accepts either test-style payload:
+      {"team1": "...", "team2": "...", "score1": 81, "score2": 80, "status": "Final"}
+    or provider-style payload:
+      {"home": "...", "away": "...", "home_score": 81, "away_score": 80, "status": "..."}
+    Returns unified dicts with keys: home, away, home_score, away_score, status
+    """
+    out: List[Dict[str, Any]] = []
+    for it in items or []:
+        if "home" in it or "away" in it:
+            home = it.get("home")
+            away = it.get("away")
+            s_home = it.get("home_score", 0)
+            s_away = it.get("away_score", 0)
+            status = it.get("status") or "Scheduled"
+        else:
+            home = it.get("team1")
+            away = it.get("team2")
+            s_home = it.get("score1", 0)
+            s_away = it.get("score2", 0)
+            status = it.get("status") or "Scheduled"
+        try:
+            s_home = int(s_home)
+            s_away = int(s_away)
+        except Exception:
+            continue
+        if home and away:
+            out.append({
+                "home": str(home),
+                "away": str(away),
+                "home_score": s_home,
+                "away_score": s_away,
+                "status": str(status),
+            })
+    return out

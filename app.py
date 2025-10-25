@@ -15,6 +15,7 @@
 # -------------------------------
 
 from __future__ import annotations
+import os
 
 from datetime import datetime, date, timezone
 from typing import Dict
@@ -26,6 +27,28 @@ from bracket_logic import evaluate_and_finalize_game, live_owner_leader_vs_sprea
 from data_fetchers.scores import update_game_scores
 from data_fetchers.spreads import update_game_spreads
 from models import Game, db
+# config.py
+# Load environment variables from .env if present
+from dotenv import load_dotenv
+load_dotenv()
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+
+class Config:
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL",
+        f"sqlite:///{os.path.join(basedir, 'instance', 'mmm.db')}"
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Providers / toggles
+    ODDS_API_KEY = os.environ.get("ODDS_API_KEY", "").strip()
+    ENABLE_LIVE_SPREADS = os.environ.get(
+        "ENABLE_LIVE_SPREADS", "true").lower() == "true"
+    ENABLE_LIVE_SCORES = os.environ.get(
+        "ENABLE_LIVE_SCORES", "true").lower() == "true"
 
 
 # ---------- Utilities ----------
