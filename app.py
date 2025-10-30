@@ -437,23 +437,242 @@ def create_app() -> Flask:
         """Clear all team assignments."""
         from flask import request, redirect, url_for, flash
         from models import Team
-        
+
         # Get year
         year = request.form.get("year", type=int)
         if not year:
             flash("Invalid year", "error")
             return redirect(url_for("admin_draft"))
-        
+
         # Clear all assignments for this year
         teams = Team.query.filter_by(year=year).all()
         for team in teams:
             team.initial_owner_id = None
             team.current_owner_id = None
-        
+
         db.session.commit()
-        
+
         flash("All team assignments cleared", "success")
         return redirect(url_for("admin_draft"))
+
+    @app.route("/admin/reset_test_data", methods=["POST"])
+    def admin_reset_test_data():
+        """Reset all data and load test participants and 2024 bracket."""
+        from flask import redirect, url_for, flash
+        from models import Participant
+        import csv
+        import random
+        from collections import defaultdict
+
+        try:
+            # Step 1: Delete all existing data
+            print("🗑️  Deleting all games, teams, and participants...")
+            db.session.query(Game).delete()
+            db.session.query(Team).delete()
+            db.session.query(Participant).delete()
+            db.session.commit()
+
+            # Step 2: Add test participants
+            print("➕ Adding 16 test participants...")
+            test_names = [
+                "Ryan", "Alice", "Bob", "Carol", "David",
+                "Emma", "Frank", "Grace", "Henry", "Ivy",
+                "Jack", "Kate", "Liam", "Maya", "Nathan", "Olivia"
+            ]
+
+            participants = []
+            for name in test_names:
+                participant = Participant(
+                    name=name,
+                    email=f"{name.lower()}@example.com"
+                )
+                db.session.add(participant)
+                participants.append(participant)
+
+            db.session.commit()
+            print(f"✅ Added {len(participants)} participants")
+
+            # Step 3: Load 2024 bracket from CSV
+            print("📂 Loading 2024 bracket from CSV...")
+            csv_path = "bracket_2024.csv"
+            year = 2024
+
+            team_objects = {}
+            with open(csv_path, 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    team = Team(
+                        name=row['team_name'].strip(),
+                        seed=int(row['seed']),
+                        region=row['region'].strip(),
+                        year=year
+                    )
+                    db.session.add(team)
+                    team_objects[row['team_name'].strip()] = team
+
+            db.session.flush()  # Assign IDs
+            print(f"✅ Created {len(team_objects)} teams")
+
+            # Step 4: Create games structure
+            print("🎮 Creating bracket games...")
+            REGIONS = ["East", "West", "South", "Midwest"]
+            BRACKET_STRUCTURE = [
+                ("64", 32), ("32", 16), ("16", 8), ("8", 4), ("4", 2), ("2", 1)
+            ]
+
+            games_by_round = {}
+            for round_name, count in BRACKET_STRUCTURE:
+                games_by_round[round_name] = []
+                for i in range(count):
+                    region = None
+                    if round_name in ["64", "32", "16", "8"]:
+                        region = REGIONS[i % len(REGIONS)]
+
+                    game = Game(
+                        round=round_name,
+                        region=region,
+                        year=year,
+                        status="Scheduled"
+                    )
+                    db.session.add(game)
+                    games_by_round[round_name].append(game)
+
+            db.session.flush()
+
+            # Link games for bracket progression
+            print("🔗 Linking bracket games...")
+            _link_bracket_games_helper(games_by_round, REGIONS)
+
+            # Assign teams to first round
+            print("👥 Assigning teams to first round...")
+            _assign_first_round_helper(games_by_round["64"], team_objects, REGIONS)
+
+            db.session.commit()
+
+            # Step 5: Random draft assignment
+            print("🎲 Randomly assigning teams to participants...")
+            teams = Team.query.filter_by(year=year).all()
+            teams_by_region = defaultdict(list)
+            for team in teams:
+                teams_by_region[team.region].append(team)
+
+            shuffled_participants = list(participants)
+            random.shuffle(shuffled_participants)
+
+            for region, region_teams in teams_by_region.items():
+                shuffled_teams = list(region_teams)
+                random.shuffle(shuffled_teams)
+
+                for i, participant in enumerate(shuffled_participants):
+                    team = shuffled_teams[i]
+                    team.initial_owner_id = participant.id
+                    team.current_owner_id = participant.id
+
+            # Set game owner fields for Round of 64
+            r64_games = Game.query.filter_by(year=year, round="64").all()
+            for game in r64_games:
+                if game.team1_id and game.team1:
+                    game.team1_owner_id = game.team1.initial_owner_id
+                if game.team2_id and game.team2:
+                    game.team2_owner_id = game.team2.initial_owner_id
+
+            db.session.commit()
+
+            flash("✅ Test data reset complete! Added 16 participants, loaded 2024 bracket, and randomly assigned teams.", "success")
+            print("✅ Test data reset successful!")
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f"❌ Error resetting test data: {str(e)}", "error")
+            print(f"❌ Error: {e}")
+            import traceback
+            traceback.print_exc()
+
+        return redirect(url_for("admin"))
+
+    def _link_bracket_games_helper(games_by_round, REGIONS):
+        """Helper to link bracket games for progression."""
+        # Round of 64 → Round of 32
+        r64_games = games_by_round["64"]
+        r32_games = games_by_round["32"]
+
+        for region in REGIONS:
+            region_r64 = sorted([g for g in r64_games if g.region == region], key=lambda g: g.id)
+            region_r32 = sorted([g for g in r32_games if g.region == region], key=lambda g: g.id)
+
+            for i, game in enumerate(region_r64):
+                next_game_index = i // 2
+                if next_game_index < len(region_r32):
+                    game.next_game_id = region_r32[next_game_index].id
+                    game.next_game_slot = 1 if i % 2 == 0 else 2
+
+        # Round of 32 → Round of 16
+        r16_games = games_by_round["16"]
+        for region in REGIONS:
+            region_r32 = sorted([g for g in r32_games if g.region == region], key=lambda g: g.id)
+            region_r16 = sorted([g for g in r16_games if g.region == region], key=lambda g: g.id)
+
+            for i, game in enumerate(region_r32):
+                next_game_index = i // 2
+                if next_game_index < len(region_r16):
+                    game.next_game_id = region_r16[next_game_index].id
+                    game.next_game_slot = 1 if i % 2 == 0 else 2
+
+        # Round of 16 → Elite 8
+        r8_games = games_by_round["8"]
+        for region in REGIONS:
+            region_r16 = sorted([g for g in r16_games if g.region == region], key=lambda g: g.id)
+            region_r8 = sorted([g for g in r8_games if g.region == region], key=lambda g: g.id)
+
+            for i, game in enumerate(region_r16):
+                next_game_index = i // 2
+                if next_game_index < len(region_r8):
+                    game.next_game_id = region_r8[next_game_index].id
+                    game.next_game_slot = 1 if i % 2 == 0 else 2
+
+        # Elite 8 → Final Four
+        r4_games = games_by_round["4"]
+        r8_games_sorted = sorted(r8_games, key=lambda g: g.id)
+
+        for i, game in enumerate(r8_games_sorted):
+            next_game_index = i // 2
+            if next_game_index < len(r4_games):
+                game.next_game_id = r4_games[next_game_index].id
+                game.next_game_slot = 1 if i % 2 == 0 else 2
+
+        # Final Four → Championship
+        r2_games = games_by_round["2"]
+        for i, game in enumerate(r4_games):
+            if len(r2_games) > 0:
+                game.next_game_id = r2_games[0].id
+                game.next_game_slot = 1 if i == 0 else 2
+
+    def _assign_first_round_helper(games, team_objects, REGIONS):
+        """Helper to assign teams to first round based on standard seeding."""
+        matchups = [
+            (1, 16), (8, 9), (5, 12), (4, 13),
+            (6, 11), (3, 14), (7, 10), (2, 15)
+        ]
+
+        for region in REGIONS:
+            region_teams = {
+                t.seed: t for t in team_objects.values()
+                if t.region == region
+            }
+
+            region_games = sorted([g for g in games if g.region == region], key=lambda g: g.id)
+
+            for game_idx, (seed1, seed2) in enumerate(matchups):
+                if game_idx < len(region_games):
+                    game = region_games[game_idx]
+                    team1 = region_teams.get(seed1)
+                    team2 = region_teams.get(seed2)
+
+                    if team1 and team2:
+                        game.team1_id = team1.id
+                        game.team2_id = team2.id
+                        game.team1_owner_id = team1.initial_owner_id
+                        game.team2_owner_id = team2.initial_owner_id
 
     @app.route("/bracket")
     def bracket():

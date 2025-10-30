@@ -34,7 +34,7 @@
 
     <!-- Quick Links -->
     <div class="row mb-4">
-      <div class="col-md-6 mb-3">
+      <div class="col-md-4 mb-3">
         <div class="card shadow-sm">
           <div class="card-body">
             <h5 class="card-title">👥 Manage Participants</h5>
@@ -52,7 +52,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-6 mb-3">
+      <div class="col-md-4 mb-3">
         <div class="card shadow-sm">
           <div class="card-body">
             <h5 class="card-title">🎯 Assign Teams (Draft)</h5>
@@ -69,6 +69,23 @@
             {% else %}
               <button class="btn btn-secondary" disabled>Start Draft</button>
             {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card shadow-sm border-danger">
+          <div class="card-body">
+            <h5 class="card-title">🔄 Reset Test Data</h5>
+            <p class="card-text text-muted">
+              <strong>⚠️ Warning:</strong> This will delete ALL data and load fresh test data.
+              <span class="badge bg-info text-dark">Testing Only</span>
+            </p>
+            <form method="post" action="{{ url_for('admin_reset_test_data') }}" onsubmit="return confirm('⚠️ Are you sure? This will DELETE all participants, teams, and games, then load 2024 test data with 16 participants and random team assignments. This cannot be undone!');">
+              <button type="submit" class="btn btn-danger">Reset Test Data</button>
+            </form>
+            <small class="text-muted d-block mt-2">
+              Loads: 16 participants, 2024 bracket, random draft
+            </small>
           </div>
         </div>
       </div>
