@@ -24,9 +24,19 @@ def _favorite_and_underdog(game: Game) -> Tuple[Team, Team]:
     """
     Return (favorite_team, underdog_team) based on the stored favorite id.
     Requires: game.spread (float) and game.spread_favorite_team set.
+    Note: For pick'em games (spread == 0.0), spread_favorite_team may be None.
     """
-    if not game.spread or not game.spread_favorite_team:
-        raise SpreadEvaluationError("Spread or favorite team missing on Game.")
+    if game.spread is None:
+        raise SpreadEvaluationError("Spread is missing on Game.")
+
+    # For pick'em games (spread == 0.0), favorite team might not be set
+    if game.spread == 0.0:
+        # No favorite in a pick'em, so we can't use this function
+        raise SpreadEvaluationError("Pick'em game (spread = 0.0) has no favorite.")
+
+    if not game.spread_favorite_team:
+        raise SpreadEvaluationError("Favorite team missing on Game.")
+
     fav = game.spread_favorite_team
 
     if game.team1_id == fav.id:
@@ -46,6 +56,7 @@ def determine_owner_winner_vs_spread(game: Game) -> Optional[Participant]:
     for a FINAL game.
 
     Rules (from the project plan):
+      - For pick'em games (spread == 0.0): The owner of the actual game winner wins.
       - If the favorite covers (margin > spread), the favorite's owner wins.
       - If the favorite does NOT cover (margin <= spread), the underdog's owner wins.
         (This includes a 'push' where margin == spread — we treat that as the favorite
@@ -63,12 +74,19 @@ def determine_owner_winner_vs_spread(game: Game) -> Optional[Participant]:
             "Game must be Final to determine the owner winner.")
 
     _validate_game_has_scores(game)
+
+    # Handle pick'em games (spread == 0.0)
+    if game.spread == 0.0 or game.spread is None or not game.spread_favorite_team:
+        # For pick'em games, the owner of the winning team wins
+        game_winner = actual_game_winner_team(game)
+        return game_winner.current_owner
+
     fav_team, dog_team = _favorite_and_underdog(game)
 
     # Get owners from the teams themselves (current_owner)
     fav_owner = fav_team.current_owner
     dog_owner = dog_team.current_owner
-    
+
     # If either team doesn't have an owner, return None
     if not fav_owner or not dog_owner:
         return None
@@ -81,7 +99,7 @@ def determine_owner_winner_vs_spread(game: Game) -> Optional[Participant]:
 
     # If margin > spread -> favorite covered -> favorite OWNER wins.
     # Else (margin <= spread) -> underdog OWNER wins (push counts here).
-    if margin > (game.spread or 0):
+    if margin > game.spread:
         return fav_owner
     else:
         return dog_owner
