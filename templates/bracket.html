@@ -18,8 +18,11 @@
     <div class="container-fluid">
       <div class="d-flex justify-content-between align-items-center">
         <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">← March Madness Madness</a>
-        <div>
-          <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light me-2">Table View</a>
+        <div class="d-flex gap-2">
+          <button id="themeToggle" class="theme-toggle" title="Toggle light/dark mode">
+            <span id="themeIcon">☀️</span>
+          </button>
+          <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light">Table View</a>
           <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
         </div>
       </div>
@@ -809,5 +812,38 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Theme toggle functionality
+    (function() {
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      const body = document.body;
+
+      // Check for saved theme preference or default to dark mode
+      const currentTheme = localStorage.getItem('bracketTheme') || 'dark';
+
+      // Apply the current theme on page load
+      if (currentTheme === 'light') {
+        body.classList.add('light-mode');
+        themeIcon.textContent = '🌙';
+      } else {
+        themeIcon.textContent = '☀️';
+      }
+
+      // Toggle theme when button is clicked
+      themeToggle.addEventListener('click', function() {
+        body.classList.toggle('light-mode');
+
+        // Update icon and save preference
+        if (body.classList.contains('light-mode')) {
+          themeIcon.textContent = '🌙';
+          localStorage.setItem('bracketTheme', 'light');
+        } else {
+          themeIcon.textContent = '☀️';
+          localStorage.setItem('bracketTheme', 'dark');
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
