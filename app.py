@@ -26,7 +26,7 @@ from flask import Flask, render_template, request, url_for
 from bracket_logic import evaluate_and_finalize_game, live_owner_leader_vs_spread
 from data_fetchers.scores import update_game_scores
 from data_fetchers.spreads import update_game_spreads
-from models import Game, db
+from models import Game, Team, db
 # config.py
 # Load environment variables from .env if present
 from dotenv import load_dotenv
@@ -70,9 +70,429 @@ def create_app() -> Flask:
     """
     app = Flask(__name__)
     app.config.from_object("config.Config")
+    # Enable flash messaging for admin interface
+    if not app.config.get('SECRET_KEY'):
+        app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
     db.init_app(app)
 
     # ----- Routes -----
+
+    @app.route("/admin")
+    def admin():
+        """Admin dashboard with links to all admin functions."""
+        from flask import render_template
+        # Get all scheduled or in-progress games for current year
+        current_year = datetime.now(timezone.utc).year
+        games = (
+            Game.query
+            .filter(Game.year == current_year)
+            .filter(Game.status.in_(["Scheduled", "In Progress"]))
+            .order_by(Game.region.asc(), Game.round.asc(), Game.id.asc())
+            .all()
+        )
+        
+        # Get participant count for dashboard
+        from models import Participant
+        participant_count = db.session.query(Participant).count()
+        
+        return render_template(
+            "admin.html", 
+            games=games, 
+            year=current_year,
+            participant_count=participant_count
+        )
+
+    @app.route("/admin/update_game", methods=["POST"])
+    def admin_update_game():
+        """Handle manual game updates from admin form."""
+        from flask import request, redirect, url_for, flash
+        
+        game_id = request.form.get("game_id", type=int)
+        action = request.form.get("action")
+        
+        if not game_id:
+            if hasattr(app, 'flash'):
+                flash("Invalid game ID", "error")
+            return redirect(url_for("admin"))
+        
+        game = db.session.get(Game, game_id)
+        if not game:
+            if hasattr(app, 'flash'):
+                flash(f"Game {game_id} not found", "error")
+            return redirect(url_for("admin"))
+        
+        try:
+            if action == "set_spread":
+                spread = request.form.get("spread", type=float)
+                favorite_id = request.form.get("favorite_id", type=int)
+                if spread is not None and favorite_id:
+                    game.spread = spread
+                    game.spread_favorite_team_id = favorite_id
+                    db.session.commit()
+                    if hasattr(app, 'flash'):
+                        flash(f"Spread updated for game {game_id}", "success")
+            
+            elif action == "set_scores":
+                team1_score = request.form.get("team1_score", type=int)
+                team2_score = request.form.get("team2_score", type=int)
+                status = request.form.get("status")
+                
+                if team1_score is not None and team2_score is not None:
+                    game.team1_score = team1_score
+                    game.team2_score = team2_score
+                    if status:
+                        game.status = status
+                    db.session.commit()
+                    
+                    # If marked final, evaluate
+                    if status == "Final":
+                        team_winner, owner_winner = evaluate_and_finalize_game(game.id)
+                        if hasattr(app, 'flash'):
+                            flash(f"Game {game_id} finalized. Winner: {team_winner.name} (Owner: {owner_winner.name})", "success")
+                    else:
+                        if hasattr(app, 'flash'):
+                            flash(f"Scores updated for game {game_id}", "success")
+        
+        except Exception as e:
+            if hasattr(app, 'flash'):
+                flash(f"Error updating game: {str(e)}", "error")
+            import logging
+            logging.error(f"Admin update error: {e}")
+        
+        return redirect(url_for("admin"))
+
+    @app.route("/admin/participants")
+    def admin_participants():
+        """Manage tournament participants."""
+        from flask import render_template
+        from models import Participant
+        
+        participants = Participant.query.order_by(Participant.name.asc()).all()
+        
+        return render_template(
+            "admin_participants.html",
+            participants=participants
+        )
+    
+    @app.route("/admin/participants/add", methods=["POST"])
+    def admin_participants_add():
+        """Add a new participant."""
+        from flask import request, redirect, url_for, flash
+        from models import Participant
+        
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        
+        if not name:
+            flash("Participant name is required", "error")
+            return redirect(url_for("admin_participants"))
+        
+        # Check for duplicate
+        existing = Participant.query.filter_by(name=name).first()
+        if existing:
+            flash(f"Participant '{name}' already exists", "error")
+            return redirect(url_for("admin_participants"))
+        
+        # Create new participant
+        participant = Participant(name=name, email=email or None)
+        db.session.add(participant)
+        db.session.commit()
+        
+        flash(f"Added participant: {name}", "success")
+        return redirect(url_for("admin_participants"))
+    
+    @app.route("/admin/participants/edit/<int:participant_id>", methods=["POST"])
+    def admin_participants_edit(participant_id):
+        """Edit an existing participant."""
+        from flask import request, redirect, url_for, flash
+        from models import Participant
+        
+        participant = db.session.get(Participant, participant_id)
+        if not participant:
+            flash("Participant not found", "error")
+            return redirect(url_for("admin_participants"))
+        
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        
+        if not name:
+            flash("Participant name is required", "error")
+            return redirect(url_for("admin_participants"))
+        
+        # Check for duplicate (excluding current participant)
+        existing = Participant.query.filter(
+            Participant.name == name,
+            Participant.id != participant_id
+        ).first()
+        if existing:
+            flash(f"Participant '{name}' already exists", "error")
+            return redirect(url_for("admin_participants"))
+        
+        # Update participant
+        participant.name = name
+        participant.email = email or None
+        db.session.commit()
+        
+        flash(f"Updated participant: {name}", "success")
+        return redirect(url_for("admin_participants"))
+    
+    @app.route("/admin/participants/delete/<int:participant_id>", methods=["POST"])
+    def admin_participants_delete(participant_id):
+        """Delete a participant."""
+        from flask import redirect, url_for, flash
+        from models import Participant
+        
+        participant = db.session.get(Participant, participant_id)
+        if not participant:
+            flash("Participant not found", "error")
+            return redirect(url_for("admin_participants"))
+        
+        # Check if participant owns any teams
+        teams_owned = Team.query.filter(
+            (Team.initial_owner_id == participant_id) |
+            (Team.current_owner_id == participant_id)
+        ).count()
+        
+        if teams_owned > 0:
+            flash(f"Cannot delete {participant.name} - they own {teams_owned} team(s). Remove team assignments first.", "error")
+            return redirect(url_for("admin_participants"))
+        
+        name = participant.name
+        db.session.delete(participant)
+        db.session.commit()
+        
+        flash(f"Deleted participant: {name}", "success")
+        return redirect(url_for("admin_participants"))
+
+    @app.route("/admin/draft")
+    def admin_draft():
+        """Team assignment (draft) interface."""
+        from flask import render_template, flash, redirect, url_for
+        from models import Participant, Team
+        
+        # Get all participants
+        participants = Participant.query.order_by(Participant.name.asc()).all()
+        
+        # Check if we have exactly 16
+        if len(participants) != 16:
+            flash(f"Need exactly 16 participants for draft (currently have {len(participants)})", "error")
+            return redirect(url_for("admin_participants"))
+        
+        # Get all teams for current year (or most recent)
+        years = [y for (y,) in db.session.query(Team.year).distinct().order_by(Team.year.desc()).all()]
+        current_year = years[0] if years else datetime.now(timezone.utc).year
+        
+        teams = Team.query.filter_by(year=current_year).order_by(
+            Team.region.asc(),
+            Team.seed.asc()
+        ).all()
+        
+        if len(teams) < 64:
+            flash(f"Need 64 teams for draft (currently have {len(teams)} for {current_year})", "error")
+            return redirect(url_for("admin"))
+        
+        # Group teams by region
+        from collections import defaultdict
+        teams_by_region = defaultdict(list)
+        for team in teams:
+            teams_by_region[team.region].append(team)
+        
+        # Calculate assignment stats
+        assignment_stats = {}
+        for participant in participants:
+            owned_teams = Team.query.filter_by(
+                year=current_year,
+                initial_owner_id=participant.id
+            ).all()
+            
+            # Count by region
+            regions = {"East": 0, "West": 0, "South": 0, "Midwest": 0}
+            for team in owned_teams:
+                if team.region in regions:
+                    regions[team.region] += 1
+            
+            assignment_stats[participant.id] = {
+                "total": len(owned_teams),
+                "regions": regions,
+                "complete": len(owned_teams) == 4 and all(c == 1 for c in regions.values())
+            }
+        
+        return render_template(
+            "admin_draft.html",
+            participants=participants,
+            teams_by_region=dict(teams_by_region),
+            assignment_stats=assignment_stats,
+            year=current_year
+        )
+    
+    @app.route("/admin/draft/assign", methods=["POST"])
+    def admin_draft_assign():
+        """Save team assignments from draft."""
+        from flask import request, redirect, url_for, flash
+        from models import Participant, Team
+        
+        # Get year
+        year = request.form.get("year", type=int)
+        if not year:
+            flash("Invalid year", "error")
+            return redirect(url_for("admin_draft"))
+        
+        # Process all team assignments
+        teams = Team.query.filter_by(year=year).all()
+        updated_count = 0
+        
+        for team in teams:
+            owner_id = request.form.get(f"team_{team.id}", type=int)
+            if owner_id:
+                team.initial_owner_id = owner_id
+                team.current_owner_id = owner_id
+                updated_count += 1
+        
+        db.session.commit()
+        
+        # IMPORTANT: Now set game owner fields for Round of 64
+        # This preserves who owned each team at the START of the tournament
+        r64_games = Game.query.filter_by(year=year, round="64").all()
+        for game in r64_games:
+            if game.team1_id and game.team1:
+                game.team1_owner_id = game.team1.initial_owner_id
+            if game.team2_id and game.team2:
+                game.team2_owner_id = game.team2.initial_owner_id
+        
+        db.session.commit()
+        
+        flash(f"Updated {updated_count} team assignments", "success")
+        return redirect(url_for("admin_draft"))
+    
+    @app.route("/admin/draft/random", methods=["POST"])
+    def admin_draft_random():
+        """Randomly assign teams to participants."""
+        from flask import request, redirect, url_for, flash
+        from models import Participant, Team
+        import random
+        
+        # Get year
+        year = request.form.get("year", type=int)
+        if not year:
+            flash("Invalid year", "error")
+            return redirect(url_for("admin_draft"))
+        
+        # Get participants and teams
+        participants = Participant.query.all()
+        if len(participants) != 16:
+            flash(f"Need exactly 16 participants (have {len(participants)})", "error")
+            return redirect(url_for("admin_draft"))
+        
+        teams = Team.query.filter_by(year=year).all()
+        if len(teams) != 64:
+            flash(f"Need exactly 64 teams (have {len(teams)})", "error")
+            return redirect(url_for("admin_draft"))
+        
+        # Group teams by region
+        from collections import defaultdict
+        teams_by_region = defaultdict(list)
+        for team in teams:
+            teams_by_region[team.region].append(team)
+        
+        # Verify each region has 16 teams
+        for region, region_teams in teams_by_region.items():
+            if len(region_teams) != 16:
+                flash(f"Region {region} has {len(region_teams)} teams (need 16)", "error")
+                return redirect(url_for("admin_draft"))
+        
+        # Shuffle participants
+        shuffled_participants = list(participants)
+        random.shuffle(shuffled_participants)
+        
+        # Assign teams: each participant gets one team from each region
+        for region, region_teams in teams_by_region.items():
+            # Shuffle teams in this region
+            shuffled_teams = list(region_teams)
+            random.shuffle(shuffled_teams)
+            
+            # Assign one to each participant
+            for i, participant in enumerate(shuffled_participants):
+                team = shuffled_teams[i]
+                team.initial_owner_id = participant.id
+                team.current_owner_id = participant.id
+        
+        db.session.commit()
+        
+        # IMPORTANT: Set game owner fields for Round of 64
+        # This preserves who owned each team at the START of the tournament
+        r64_games = Game.query.filter_by(year=year, round="64").all()
+        for game in r64_games:
+            if game.team1_id and game.team1:
+                game.team1_owner_id = game.team1.initial_owner_id
+            if game.team2_id and game.team2:
+                game.team2_owner_id = game.team2.initial_owner_id
+        
+        db.session.commit()
+        
+        flash("✅ Teams randomly assigned! Each participant has 4 teams (one per region).", "success")
+        return redirect(url_for("admin_draft"))
+    
+    @app.route("/admin/draft/reset", methods=["POST"])
+    def admin_draft_reset():
+        """Clear all team assignments."""
+        from flask import request, redirect, url_for, flash
+        from models import Team
+        
+        # Get year
+        year = request.form.get("year", type=int)
+        if not year:
+            flash("Invalid year", "error")
+            return redirect(url_for("admin_draft"))
+        
+        # Clear all assignments for this year
+        teams = Team.query.filter_by(year=year).all()
+        for team in teams:
+            team.initial_owner_id = None
+            team.current_owner_id = None
+        
+        db.session.commit()
+        
+        flash("All team assignments cleared", "success")
+        return redirect(url_for("admin_draft"))
+
+    @app.route("/bracket")
+    def bracket():
+        """Visual bracket tree display."""
+        from flask import render_template
+        from models import Team
+        
+        # Get year from query string or default to most recent
+        years = [y for (y,) in db.session.query(Team.year).distinct().order_by(Team.year.desc()).all()]
+        if not years:
+            current_year = datetime.now(timezone.utc).year
+        else:
+            current_year = years[0]
+        
+        try:
+            selected_year = int(request.args.get("year", current_year))
+        except ValueError:
+            selected_year = current_year
+        
+        # Get all games for this year, ordered by round and region
+        games = (
+            Game.query
+            .filter_by(year=selected_year)
+            .order_by(Game.region.asc(), Game.round.asc(), Game.id.asc())
+            .all()
+        )
+        
+        # Group by region
+        from collections import defaultdict
+        regions = defaultdict(lambda: defaultdict(list))
+        for game in games:
+            regions[game.region][game.round].append(game)
+        
+        return render_template(
+            "bracket.html",
+            regions=dict(regions),
+            years=years,
+            selected_year=selected_year
+        )
 
     @app.route("/")
     def home():
@@ -114,11 +534,14 @@ def create_app() -> Flask:
         )
 
         # Compute live leader safely; never let logic errors break the page.
+        import logging
+        logger = logging.getLogger(__name__)
         for g in games:
             try:
                 g._live_owner_leader = live_owner_leader_vs_spread(
                     g)  # type: ignore[attr-defined]
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Failed to compute live leader for game {g.id}: {e}")
                 g._live_owner_leader = None  # type: ignore[attr-defined]
 
         # Group into nested dict: { region: { round: [games...] } }
@@ -148,6 +571,7 @@ def create_app() -> Flask:
         Adds url_with_year() to Jinja:
         - Behaves like url_for(), but ensures the current ?year=... sticks
             unless you explicitly pass a different year.
+        Also adds format_game_time() for displaying times in ET.
         """
         def url_with_year(endpoint, **values):
             # Prefer explicitly provided year, else take it from the current query string
@@ -155,7 +579,21 @@ def create_app() -> Flask:
             if year:
                 values["year"] = year
             return url_for(endpoint, **values)
-        return dict(url_with_year=url_with_year)
+        
+        def format_game_time(dt):
+            """Format a datetime in Eastern Time for display."""
+            if not dt:
+                return None
+            from datetime import timezone
+            from zoneinfo import ZoneInfo
+            # Ensure timezone aware
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            # Convert to ET
+            et_time = dt.astimezone(ZoneInfo("America/New_York"))
+            return et_time.strftime("%a, %b %d at %I:%M %p ET")
+        
+        return dict(url_with_year=url_with_year, format_game_time=format_game_time)
 
     @app.cli.command("eval-game")
     def eval_game_cmd():

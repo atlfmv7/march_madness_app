@@ -14,6 +14,7 @@ from flask import current_app
 from models import db, Game, Team
 from util.name_map import to_canonical, normalize_key
 from providers.odds_api import fetch_spreads_for_date
+import requests
 # ---------- Types ----------
 # Normalized spread entry structure returned by fetch_spreads_for_date():
 # {

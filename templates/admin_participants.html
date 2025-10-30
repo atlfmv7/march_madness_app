@@ -1,0 +1,240 @@
+<!-- templates/admin_participants.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manage Participants - March Madness Madness</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+      <a href="{{ url_for('home') }}" class="navbar-brand">March Madness Madness</a>
+      <span class="badge bg-warning text-dark">Admin Panel</span>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+      <div class="col">
+        <h1 class="h3">Manage Participants</h1>
+        <p class="text-muted">
+          Add, edit, or remove the 16 people in your bracket pool.
+          <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-secondary ms-3">← Back to Admin</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Status Badge -->
+    <div class="alert {% if participants|length == 16 %}alert-success{% elif participants|length < 16 %}alert-warning{% else %}alert-danger{% endif %}">
+      <strong>Current Status:</strong> 
+      {{ participants|length }} participant(s) 
+      {% if participants|length == 16 %}
+        ✅ Ready for draft!
+      {% elif participants|length < 16 %}
+        ⚠️ Need {{ 16 - participants|length }} more for a full pool
+      {% else %}
+        ❌ Too many participants (need exactly 16)
+      {% endif %}
+    </div>
+
+    <div class="row">
+      <!-- Add New Participant -->
+      <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <strong>➕ Add New Participant</strong>
+          </div>
+          <div class="card-body">
+            <form method="post" action="{{ url_for('admin_participants_add') }}">
+              <div class="mb-3">
+                <label for="add_name" class="form-label">Name *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="add_name" 
+                  name="name" 
+                  placeholder="e.g., Ryan, Alice, Bob"
+                  required
+                  maxlength="100"
+                >
+              </div>
+              <div class="mb-3">
+                <label for="add_email" class="form-label">Email (optional)</label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  id="add_email" 
+                  name="email" 
+                  placeholder="name@example.com"
+                  maxlength="120"
+                >
+                <small class="text-muted">For future notifications (optional)</small>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">
+                Add Participant
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Participants List -->
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <strong>👥 All Participants ({{ participants|length }})</strong>
+          </div>
+          <div class="card-body">
+            {% if participants %}
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th style="width: 5%">#</th>
+                      <th style="width: 35%">Name</th>
+                      <th style="width: 35%">Email</th>
+                      <th style="width: 25%">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for participant in participants %}
+                    <tr>
+                      <td>{{ loop.index }}</td>
+                      <td>
+                        <strong>{{ participant.name }}</strong>
+                      </td>
+                      <td>
+                        <small class="text-muted">{{ participant.email or '—' }}</small>
+                      </td>
+                      <td>
+                        <!-- Edit Button (opens modal) -->
+                        <button 
+                          class="btn btn-sm btn-outline-primary"
+                          data-bs-toggle="modal"
+                          data-bs-target="#editModal{{ participant.id }}"
+                        >
+                          Edit
+                        </button>
+                        
+                        <!-- Delete Button -->
+                        <form 
+                          method="post" 
+                          action="{{ url_for('admin_participants_delete', participant_id=participant.id) }}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Delete {{ participant.name }}? This cannot be undone.');"
+                        >
+                          <button type="submit" class="btn btn-sm btn-outline-danger">
+                            Delete
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+
+                    <!-- Edit Modal for this participant -->
+                    <div class="modal fade" id="editModal{{ participant.id }}" tabindex="-1">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title">Edit Participant</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <form method="post" action="{{ url_for('admin_participants_edit', participant_id=participant.id) }}">
+                            <div class="modal-body">
+                              <div class="mb-3">
+                                <label for="edit_name{{ participant.id }}" class="form-label">Name *</label>
+                                <input 
+                                  type="text" 
+                                  class="form-control" 
+                                  id="edit_name{{ participant.id }}" 
+                                  name="name" 
+                                  value="{{ participant.name }}"
+                                  required
+                                  maxlength="100"
+                                >
+                              </div>
+                              <div class="mb-3">
+                                <label for="edit_email{{ participant.id }}" class="form-label">Email</label>
+                                <input 
+                                  type="email" 
+                                  class="form-control" 
+                                  id="edit_email{{ participant.id }}" 
+                                  name="email" 
+                                  value="{{ participant.email or '' }}"
+                                  maxlength="120"
+                                >
+                              </div>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="alert alert-info">
+                <strong>No participants yet.</strong> Add your first participant using the form on the left!
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Quick Add Multiple -->
+        {% if participants|length < 16 %}
+        <div class="card shadow-sm mt-3">
+          <div class="card-header">
+            <strong>⚡ Quick Tip</strong>
+          </div>
+          <div class="card-body">
+            <p class="mb-2">Need to add multiple people quickly? Add them one at a time using the form above, or:</p>
+            <ul class="mb-0">
+              <li>Copy names from an email or text message</li>
+              <li>Paste one at a time into the "Name" field</li>
+              <li>Email is optional - skip it to save time</li>
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-4">
+      <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">← Back to Admin</a>
+      {% if participants|length == 16 %}
+        <a href="{{ url_for('home') }}" class="btn btn-success ms-2">
+          ✅ View Bracket
+        </a>
+        <span class="text-muted ms-3">Ready to assign teams to participants!</span>
+      {% endif %}
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

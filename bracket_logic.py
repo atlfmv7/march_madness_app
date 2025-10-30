@@ -40,7 +40,7 @@ def _favorite_and_underdog(game: Game) -> Tuple[Team, Team]:
     return fav, underdog
 
 
-def determine_owner_winner_vs_spread(game: Game) -> Participant:
+def determine_owner_winner_vs_spread(game: Game) -> Optional[Participant]:
     """
     Determine which *participant/owner* wins this matchup *against the spread*
     for a FINAL game.
@@ -56,6 +56,7 @@ def determine_owner_winner_vs_spread(game: Game) -> Participant:
     Returns:
       The Participant (owner) who wins the *matchup* (i.e., who advances ownership),
       which may differ from the actual game winner team.
+      Returns None if either team doesn't have an owner.
     """
     if game.status != "Final":
         raise SpreadEvaluationError(
@@ -64,15 +65,19 @@ def determine_owner_winner_vs_spread(game: Game) -> Participant:
     _validate_game_has_scores(game)
     fav_team, dog_team = _favorite_and_underdog(game)
 
+    # Get owners from the teams themselves (current_owner)
+    fav_owner = fav_team.current_owner
+    dog_owner = dog_team.current_owner
+    
+    # If either team doesn't have an owner, return None
+    if not fav_owner or not dog_owner:
+        return None
+
     # Compute the favorite's margin of victory (positive means favorite is ahead)
     if fav_team.id == game.team1_id:
         margin = (game.team1_score or 0) - (game.team2_score or 0)
-        fav_owner = game.team1_owner
-        dog_owner = game.team2_owner
     else:
         margin = (game.team2_score or 0) - (game.team1_score or 0)
-        fav_owner = game.team2_owner
-        dog_owner = game.team1_owner
 
     # If margin > spread -> favorite covered -> favorite OWNER wins.
     # Else (margin <= spread) -> underdog OWNER wins (push counts here).
@@ -97,12 +102,13 @@ def actual_game_winner_team(game: Game) -> Team:
 
 # bracket_logic.py (additions)
 
-def evaluate_and_finalize_game(game_id: int) -> Tuple[Team, Participant]:
+def evaluate_and_finalize_game(game_id: int) -> Tuple[Team, Optional[Participant]]:
     """
     Evaluate a FINAL game's result and update its 'winner_id' field.
     Also propagates advancing team and owner to the next round if linked.
     Returns:
       (actual_winner_team, owner_winner_participant)
+      owner_winner_participant may be None if teams don't have owners
     """
     game: Game = db.session.get(Game, game_id)
     if not game:
@@ -124,13 +130,19 @@ def evaluate_and_finalize_game(game_id: int) -> Tuple[Team, Participant]:
     return team_winner, owner_winner
 
 
-def propagate_to_next_round(game: Game, team_winner: Team, owner_winner: Participant) -> None:
+def propagate_to_next_round(game: Game, team_winner: Team, owner_winner: Optional[Participant]) -> None:
     """
     Push the actual team winner into the next game's correct slot,
     and assign the 'owner vs spread' as that team's current owner.
     - next_game_slot == 1 -> fill next_game.team1_id + team1_owner_id
     - next_game_slot == 2 -> fill next_game.team2_id + team2_owner_id
     Also updates the advancing Team.current_owner_id to owner_winner.id
+    
+    CRITICAL: When a team advances to the next round, we MUST set the next game's
+    owner field to whoever won the spread in THIS game. This preserves the correct
+    ownership history - each game shows who owned the teams when THAT game was played.
+    
+    If owner_winner is None, the team advances but keeps its current owner.
     """
     if not game.next_game_id or not game.next_game_slot:
         return  # nothing to do
@@ -139,16 +151,28 @@ def propagate_to_next_round(game: Game, team_winner: Team, owner_winner: Partici
     if not next_game:
         return
 
-    # Update the advancing team's *current* owner record
-    team_winner.current_owner_id = owner_winner.id
+    # Update the advancing team's *current* owner record (if we have a winner)
+    # This affects future games
+    if owner_winner:
+        team_winner.current_owner_id = owner_winner.id
+    # else: team keeps its current owner
 
-    # Place advancing team into the next game slot, with the spread-winner as owner
+    # Place advancing team into the next game slot
+    # ALWAYS set the owner field to whoever owns the team NOW (after this game's spread outcome)
     if game.next_game_slot == 1:
         next_game.team1_id = team_winner.id
-        next_game.team1_owner_id = owner_winner.id
+        # Set owner to the spread winner from THIS game
+        if owner_winner:
+            next_game.team1_owner_id = owner_winner.id
+        elif team_winner.current_owner_id:
+            next_game.team1_owner_id = team_winner.current_owner_id
     elif game.next_game_slot == 2:
         next_game.team2_id = team_winner.id
-        next_game.team2_owner_id = owner_winner.id
+        # Set owner to the spread winner from THIS game
+        if owner_winner:
+            next_game.team2_owner_id = owner_winner.id
+        elif team_winner.current_owner_id:
+            next_game.team2_owner_id = team_winner.current_owner_id
     else:
         # ignore unexpected slot values
         return

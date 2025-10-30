@@ -129,8 +129,13 @@ def update_game_scores(*, date_iso: str, data: Optional[List[Dict[str, Any]]] = 
             continue
 
         # Apply score + status in the correct slot orientation
-        game.team1_score = item["home_score"] if game.team1_id == home.id else item["away_score"]
-        game.team2_score = item["away_score"] if game.team2_id == away.id else item["home_score"]
+        # If team1 is the home team, assign home_score to team1_score, otherwise away_score
+        if game.team1_id == home.id:
+            game.team1_score = item["home_score"]
+            game.team2_score = item["away_score"]
+        else:  # team1 is away, team2 is home
+            game.team1_score = item["away_score"]
+            game.team2_score = item["home_score"]
         game.status = item["status"] or game.status
         db.session.commit()
 

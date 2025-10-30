@@ -1,0 +1,65 @@
+team_name,seed,region
+UConn,1,East
+Stetson,16,East
+Iowa State,2,East
+South Dakota State,15,East
+Illinois,3,East
+Morehead State,14,East
+Auburn,4,East
+Yale,13,East
+San Diego State,5,East
+UAB,12,East
+BYU,6,East
+Duquesne,11,East
+Washington State,7,East
+Drake,10,East
+Florida Atlantic,8,East
+Northwestern,9,East
+North Carolina,1,West
+Wagner,16,West
+Arizona,2,West
+Long Beach State,15,West
+Baylor,3,West
+Colgate,14,West
+Alabama,4,West
+Charleston,13,West
+Saint Mary's,5,West
+Grand Canyon,12,West
+Clemson,6,West
+New Mexico,11,West
+Dayton,7,West
+Nevada,10,West
+Mississippi State,8,West
+Michigan State,9,West
+Houston,1,South
+Longwood,16,South
+Marquette,2,South
+Western Kentucky,15,South
+Kentucky,3,South
+Oakland,14,South
+Duke,4,South
+Vermont,13,South
+Wisconsin,5,South
+James Madison,12,South
+Texas Tech,6,South
+NC State,11,South
+Florida,7,South
+Colorado,10,South
+Texas A&M,8,South
+Nebraska,9,South
+Purdue,1,Midwest
+Grambling,16,Midwest
+Tennessee,2,Midwest
+Saint Peter's,15,Midwest
+Creighton,3,Midwest
+Akron,14,Midwest
+Kansas,4,Midwest
+Samford,13,Midwest
+Gonzaga,5,Midwest
+McNeese State,12,Midwest
+South Carolina,6,Midwest
+Oregon,11,Midwest
+Texas,7,Midwest
+Colorado State,10,Midwest
+Utah State,8,Midwest
+TCU,9,Midwest

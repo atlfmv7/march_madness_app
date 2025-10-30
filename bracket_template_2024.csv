@@ -1,0 +1,87 @@
+"""
+CSV Template for Manual Bracket Import
+
+Instructions:
+1. After Selection Sunday, fill in all 64-68 teams (includes First Four)
+2. Save as: bracket_2025.csv
+3. Run: python fetch_tournament_bracket.py --csv bracket_2025.csv
+
+CSV Format:
+- team_name: Official team name (e.g., "Duke", "North Carolina")
+- seed: 1-16
+- region: East, West, South, or Midwest
+- first_four: TRUE if this is a First Four team, FALSE otherwise
+
+Notes:
+- Each region should have exactly 16 teams
+- Seeds should go from 1-16 in each region
+- First Four teams are typically: four 16-seeds and two 11-seeds (or 12-seeds)
+"""
+
+team_name,seed,region,first_four
+Duke,1,East,FALSE
+Vermont,16,East,FALSE
+Kentucky,2,East,FALSE
+Oakland,15,East,FALSE
+Florida,3,East,FALSE
+Colorado,14,East,FALSE
+Wisconsin,4,East,FALSE
+James Madison,13,East,FALSE
+San Diego State,5,East,FALSE
+UAB,12,East,FALSE
+Clemson,6,East,FALSE
+New Mexico,11,East,FALSE
+Texas A&M,7,East,FALSE
+Nebraska,10,East,FALSE
+Baylor,8,East,FALSE
+Colgate,9,East,FALSE
+
+UConn,1,West,FALSE
+Stetson,16,West,FALSE
+Iowa State,2,West,FALSE
+South Dakota State,15,West,FALSE
+Illinois,3,West,FALSE,Morehead State,14,West,FALSE
+Auburn,4,West,FALSE
+Yale,13,West,FALSE
+BYU,5,West,FALSE
+Duquesne,12,West,FALSE
+Texas Tech,6,West,FALSE
+NC State,11,West,FALSE
+Florida Atlantic,7,West,FALSE
+Northwestern,10,West,FALSE
+Utah State,8,West,FALSE
+TCU,9,West,FALSE
+
+Houston,1,South,FALSE
+Longwood,16,South,FALSE
+Marquette,2,South,FALSE
+Western Kentucky,15,South,FALSE
+Creighton,3,South,FALSE
+Akron,14,South,FALSE
+Alabama,4,South,FALSE
+Charleston,13,South,FALSE
+Saint Mary's,5,South,FALSE
+Grand Canyon,12,South,FALSE
+Texas,6,South,FALSE
+Colorado State,11,South,FALSE
+Tennessee,7,South,FALSE
+Saint Peter's,10,South,FALSE
+Mississippi State,8,South,FALSE
+Michigan State,9,South,FALSE
+
+Purdue,1,Midwest,FALSE
+Grambling,16,Midwest,FALSE
+Tennessee,2,Midwest,FALSE
+Saint Peter's,15,Midwest,FALSE
+Kansas,3,Midwest,FALSE
+Samford,14,Midwest,FALSE
+Gonzaga,4,Midwest,FALSE
+McNeese State,13,Midwest,FALSE
+Dayton,5,Midwest,FALSE
+Nevada,12,Midwest,FALSE
+South Carolina,6,Midwest,FALSE
+Oregon,11,Midwest,FALSE
+Washington State,7,Midwest,FALSE
+Drake,10,Midwest,FALSE
+Iowa,8,Midwest,FALSE
+Colorado,9,Midwest,FALSE

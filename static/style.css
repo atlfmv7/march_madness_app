@@ -1,6 +1,108 @@
 /* static/style.css
    -------------------------------
-   Minimal styling now; we’ll add status colors, badges, etc. later.
+   Enhanced styling for March Madness Madness
    ------------------------------- */
 
-body { /* example hook; empty for now */ }
+/* Live game row highlighting */
+tr:has(.badge.text-bg-light:contains("In Progress")) {
+  background-color: #fff3cd;
+}
+
+/* Winning team indicator (when live leader is shown) */
+.badge.text-bg-success {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Spread badge styling */
+.badge.text-bg-info {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+/* Status badge colors */
+.badge.text-bg-light {
+  color: #212529 !important;
+  background-color: #e9ecef !important;
+}
+
+/* Final status - make it stand out */
+tr:has(.badge:contains("Final")) {
+  opacity: 0.85;
+}
+
+/* Owner names - subtle emphasis */
+.text-muted.small {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Team seed styling */
+span.text-muted:has-text("Seed") {
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+  
+  .table th, .table td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+/* Year selector styling */
+.form-select-sm {
+  min-width: 100px;
+}
+
+/* Live indicator pulse */
+@keyframes blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0.3;
+  }
+}
+
+.navbar .badge.bg-success {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+/* Score display emphasis */
+.small.text-muted:has-text("Score:") {
+  font-weight: 600;
+  color: #495057 !important;
+}
+
+/* Empty state styling */
+.alert-warning {
+  border-left: 4px solid #ffc107;
+}
+
+/* Card shadows for depth */
+.card.shadow-sm:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+/* Round headers */
+.h6.text-uppercase.text-muted {
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
