@@ -217,8 +217,8 @@ body.bracket-page.light-mode .region-name {
 .round-column {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   min-width: 180px;
+  position: relative;
 }
 
 .round-label {
@@ -229,6 +229,8 @@ body.bracket-page.light-mode .region-name {
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Matchup Cards */
@@ -241,6 +243,20 @@ body.bracket-page.light-mode .region-name {
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   min-height: 60px;
   transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* Round 64 uses normal flow */
+.round-column.round-64 .matchup {
+  position: relative;
+}
+
+/* Other rounds use absolute positioning (set by JavaScript) */
+.round-column.round-32 .matchup,
+.round-column.round-16 .matchup,
+.round-column.round-8 .matchup {
+  position: absolute;
+  left: 0;
+  right: 0;
 }
 
 /* Light mode matchup */

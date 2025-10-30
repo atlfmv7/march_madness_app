@@ -844,6 +844,106 @@
         }
       });
     })();
+
+    // Bracket alignment functionality
+    (function() {
+      function alignBracket() {
+        // Process each region
+        const regions = document.querySelectorAll('.region-bracket');
+
+        regions.forEach(region => {
+          // Get all round columns in this region
+          const round64 = region.querySelector('.round-64');
+          const round32 = region.querySelector('.round-32');
+          const round16 = region.querySelector('.round-16');
+          const round8 = region.querySelector('.round-8');
+
+          // Set height for each round column to accommodate absolutely positioned games
+          if (round64) {
+            const r64Games = round64.querySelectorAll('.matchup');
+            if (r64Games.length > 0) {
+              const totalHeight = Array.from(r64Games).reduce((sum, game) => {
+                return sum + game.offsetHeight + 12; // 12px is margin
+              }, 0);
+
+              if (round32) round32.style.minHeight = totalHeight + 'px';
+              if (round16) round16.style.minHeight = totalHeight + 'px';
+              if (round8) round8.style.minHeight = totalHeight + 'px';
+            }
+          }
+
+          // Align Round of 32 between Round of 64 games
+          if (round64 && round32) {
+            const r64Games = round64.querySelectorAll('.matchup');
+            const r32Games = round32.querySelectorAll('.matchup');
+
+            r32Games.forEach((game, index) => {
+              const parent1 = r64Games[index * 2];
+              const parent2 = r64Games[index * 2 + 1];
+
+              if (parent1 && parent2) {
+                const parent1Center = parent1.offsetTop + (parent1.offsetHeight / 2);
+                const parent2Center = parent2.offsetTop + (parent2.offsetHeight / 2);
+                const centerPoint = (parent1Center + parent2Center) / 2;
+                const gameTop = centerPoint - (game.offsetHeight / 2);
+
+                game.style.top = gameTop + 'px';
+              }
+            });
+          }
+
+          // Align Sweet 16 between Round of 32 games
+          if (round32 && round16) {
+            const r32Games = round32.querySelectorAll('.matchup');
+            const r16Games = round16.querySelectorAll('.matchup');
+
+            r16Games.forEach((game, index) => {
+              const parent1 = r32Games[index * 2];
+              const parent2 = r32Games[index * 2 + 1];
+
+              if (parent1 && parent2) {
+                const parent1Center = parseFloat(parent1.style.top || 0) + (parent1.offsetHeight / 2);
+                const parent2Center = parseFloat(parent2.style.top || 0) + (parent2.offsetHeight / 2);
+                const centerPoint = (parent1Center + parent2Center) / 2;
+                const gameTop = centerPoint - (game.offsetHeight / 2);
+
+                game.style.top = gameTop + 'px';
+              }
+            });
+          }
+
+          // Align Elite 8 between Sweet 16 games
+          if (round16 && round8) {
+            const r16Games = round16.querySelectorAll('.matchup');
+            const r8Games = round8.querySelectorAll('.matchup');
+
+            r8Games.forEach((game, index) => {
+              const parent1 = r16Games[index * 2];
+              const parent2 = r16Games[index * 2 + 1];
+
+              if (parent1 && parent2) {
+                const parent1Center = parseFloat(parent1.style.top || 0) + (parent1.offsetHeight / 2);
+                const parent2Center = parseFloat(parent2.style.top || 0) + (parent2.offsetHeight / 2);
+                const centerPoint = (parent1Center + parent2Center) / 2;
+                const gameTop = centerPoint - (game.offsetHeight / 2);
+
+                game.style.top = gameTop + 'px';
+              }
+            });
+          }
+        });
+      }
+
+      // Run alignment after page loads and images/fonts are ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', alignBracket);
+      } else {
+        alignBracket();
+      }
+
+      // Re-align on window resize
+      window.addEventListener('resize', alignBracket);
+    })();
   </script>
 </body>
 </html>
