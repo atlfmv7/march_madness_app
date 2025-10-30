@@ -217,8 +217,9 @@ body.bracket-page.light-mode .region-name {
 .round-column {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: center;
   min-width: 180px;
+  gap: 12px;
 }
 
 .round-label {
@@ -236,11 +237,43 @@ body.bracket-page.light-mode .region-name {
   background: #1e1e30;
   border: 2px solid #2a2a40;
   border-radius: 6px;
-  margin: 6px 0;
+  margin: 0;
   position: relative;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   min-height: 60px;
   transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* Round of 64 - tight spacing */
+.round-column.round-64 {
+  gap: 12px;
+}
+
+/* Round of 32 - double spacing to center between R64 games */
+.round-column.round-32 {
+  gap: 96px;
+}
+
+.round-column.round-32 .matchup:first-of-type {
+  margin-top: 48px;
+}
+
+/* Sweet 16 - quadruple spacing to center between R32 games */
+.round-column.round-16 {
+  gap: 216px;
+}
+
+.round-column.round-16 .matchup:first-of-type {
+  margin-top: 108px;
+}
+
+/* Elite 8 - large spacing to center between Sweet 16 games */
+.round-column.round-8 {
+  gap: 456px;
+}
+
+.round-column.round-8 .matchup:first-of-type {
+  margin-top: 228px;
 }
 
 /* Light mode matchup */
