@@ -240,40 +240,51 @@ body.bracket-page.light-mode .region-name {
   margin: 0;
   position: relative;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  min-height: 60px;
+  min-height: 80px;
   transition: background 0.3s ease, border-color 0.3s ease;
 }
 
-/* Round of 64 - tight spacing */
+/* Round of 64 - tight spacing, baseline for calculations */
 .round-column.round-64 {
   gap: 12px;
 }
 
-/* Round of 32 - double spacing to center between R64 games */
+/* Round of 32 - each game centered between 2 R64 games
+   R64 game height + gap = 80 + 12 = 92px
+   R32 offset = 92/2 = 46px
+   R32 gap = 92 * 2 = 184px
+*/
 .round-column.round-32 {
-  gap: 96px;
+  gap: 184px;
 }
 
 .round-column.round-32 .matchup:first-of-type {
-  margin-top: 48px;
+  margin-top: 46px;
 }
 
-/* Sweet 16 - quadruple spacing to center between R32 games */
+/* Sweet 16 - each game centered between 2 R32 games
+   R32 game height + gap = 80 + 184 = 264px
+   Sweet 16 offset = 46 + 264/2 = 178px
+   Sweet 16 gap = 264 * 2 = 528px
+*/
 .round-column.round-16 {
-  gap: 216px;
+  gap: 528px;
 }
 
 .round-column.round-16 .matchup:first-of-type {
-  margin-top: 108px;
+  margin-top: 178px;
 }
 
-/* Elite 8 - large spacing to center between Sweet 16 games */
+/* Elite 8 - game centered between 2 Sweet 16 games
+   Sweet 16 game height + gap = 80 + 528 = 608px
+   Elite 8 offset = 178 + 608/2 = 482px
+*/
 .round-column.round-8 {
-  gap: 456px;
+  gap: 1216px;
 }
 
 .round-column.round-8 .matchup:first-of-type {
-  margin-top: 228px;
+  margin-top: 482px;
 }
 
 /* Light mode matchup */
