@@ -230,8 +230,8 @@ def simulate_tournament(year=2024, verbose=True):
         .first()
     )
     
-    if championship_game and championship_game.winner_team_id:
-        champion = db.session.get(Team, championship_game.winner_team_id)
+    if championship_game and championship_game.winner_id:
+        champion = db.session.get(Team, championship_game.winner_id)
         stats['champion'] = champion
         
         if verbose:
@@ -326,8 +326,8 @@ def show_tournament_status(year=2024):
     
     # Check for champion
     championship = Game.query.filter_by(year=year, round="2", status="Final").first()
-    if championship and championship.winner_team_id:
-        champion = db.session.get(Team, championship.winner_team_id)
+    if championship and championship.winner_id:
+        champion = db.session.get(Team, championship.winner_id)
         print(f"\n🏆 Champion: {champion.name} (Seed {champion.seed})")
         print(f"   Owner: {champion.current_owner.name if champion.current_owner else 'Unknown'}")
     
