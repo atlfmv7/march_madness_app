@@ -250,12 +250,13 @@ body.bracket-page.light-mode .region-name {
 }
 
 /* Round of 32 - each game centered between 2 R64 games
-   R64 game height + gap = 80 + 12 = 92px
-   R32 offset = 92/2 = 46px
-   R32 gap = 92 * 2 = 184px
+   R64 centers: 40, 132, 224, 316, 408, 500, 592, 684
+   R32 should center at: 86, 270, 454, 638
+   R32 starts at: 46, 230, 414, 598 (center - 40)
+   Gap between starts: 230 - 126 = 104px
 */
 .round-column.round-32 {
-  gap: 184px;
+  gap: 104px;
 }
 
 .round-column.round-32 .matchup:first-of-type {
@@ -263,28 +264,30 @@ body.bracket-page.light-mode .region-name {
 }
 
 /* Sweet 16 - each game centered between 2 R32 games
-   R32 game height + gap = 80 + 184 = 264px
-   Sweet 16 offset = 46 + 264/2 = 178px
-   Sweet 16 gap = 264 * 2 = 528px
+   R32 centers: 86, 270, 454, 638
+   Sweet 16 should center at: 178, 546
+   Sweet 16 starts at: 138, 506 (center - 40)
+   Gap between starts: 506 - 218 = 288px
 */
 .round-column.round-16 {
-  gap: 528px;
+  gap: 288px;
 }
 
 .round-column.round-16 .matchup:first-of-type {
-  margin-top: 178px;
+  margin-top: 138px;
 }
 
 /* Elite 8 - game centered between 2 Sweet 16 games
-   Sweet 16 game height + gap = 80 + 528 = 608px
-   Elite 8 offset = 178 + 608/2 = 482px
+   Sweet 16 centers: 178, 546
+   Elite 8 should center at: 362
+   Elite 8 starts at: 322 (center - 40)
 */
 .round-column.round-8 {
-  gap: 1216px;
+  gap: 0;
 }
 
 .round-column.round-8 .matchup:first-of-type {
-  margin-top: 482px;
+  margin-top: 322px;
 }
 
 /* Light mode matchup */
