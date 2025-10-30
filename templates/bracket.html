@@ -58,7 +58,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -71,7 +71,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -97,7 +97,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -110,7 +110,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -136,7 +136,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -149,7 +149,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -175,7 +175,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -188,7 +188,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -221,7 +221,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -234,7 +234,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -260,7 +260,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -273,7 +273,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -299,7 +299,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -312,7 +312,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -338,7 +338,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -351,7 +351,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -384,7 +384,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -397,7 +397,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -418,19 +418,19 @@
             {% set champ_games = regions.get("Championship", {}).get("2", regions.get(None, {}).get("2", [])) %}
             {% if champ_games %}
               {% set championship = champ_games[0] %}
-              {% if championship.status == 'Final' and championship.winner_team_id %}
+              {% if championship.status == 'Final' and championship.spread_winner_team_id() %}
           <div class="champion-section">
             <div class="champion-title">🏆 CHAMPION 🏆</div>
             <div class="champion-team">
-              {% if championship.winner_team_id == championship.team1_id %}
+              {% if championship.spread_winner_team_id() == championship.team1_id %}
                 {{ championship.team1.name }}
               {% else %}
                 {{ championship.team2.name }}
               {% endif %}
             </div>
             <div class="champion-owner">
-              Owner: 
-              {% if championship.winner_team_id == championship.team1_id %}
+              Owner:
+              {% if championship.spread_winner_team_id() == championship.team1_id %}
                 {{ championship.team1_owner.name if championship.team1_owner else "Unknown" }}
               {% else %}
                 {{ championship.team2_owner.name if championship.team2_owner else "Unknown" }}
@@ -445,7 +445,7 @@
               <div class="matchup-spread">{{ championship.spread_label() }}</div>
               {% endif %}
               {% if championship.team1 %}
-              <div class="team {% if championship.status == 'Final' and championship.winner_team_id == championship.team1_id %}winner{% elif championship.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if championship.status == 'Final' and championship.spread_winner_team_id() == championship.team1_id %}winner{% elif championship.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ championship.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ championship.team1.name }}</span>
@@ -458,7 +458,7 @@
               {% endif %}
 
               {% if championship.team2 %}
-              <div class="team {% if championship.status == 'Final' and championship.winner_team_id == championship.team2_id %}winner{% elif championship.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if championship.status == 'Final' and championship.spread_winner_team_id() == championship.team2_id %}winner{% elif championship.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ championship.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ championship.team2.name }}</span>
@@ -494,7 +494,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -507,7 +507,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -533,7 +533,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -546,7 +546,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -572,7 +572,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -585,7 +585,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -611,7 +611,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -624,7 +624,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -657,7 +657,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -670,7 +670,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -696,7 +696,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -709,7 +709,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -735,7 +735,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -748,7 +748,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>
@@ -774,7 +774,7 @@
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team1.name }}</span>
@@ -787,7 +787,7 @@
               {% endif %}
 
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
                 <div class="team-info">
                   <span class="team-name">{{ game.team2.name }}</span>

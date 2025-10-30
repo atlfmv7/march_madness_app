@@ -130,5 +130,40 @@ class Game(db.Model):
             return None
         return f"{self.team1_score}–{self.team2_score}"
 
+    def spread_winner_team_id(self):
+        """
+        Return the team_id of who wins against the spread.
+
+        The spread winner is determined by:
+        - If the favorite covers the spread, they win
+        - If the favorite doesn't cover, the underdog wins
+
+        Returns:
+            int: team_id of the spread winner, or None if game isn't final or no spread
+        """
+        # Need final scores and a spread to calculate
+        if self.team1_score is None or self.team2_score is None:
+            return None
+        if self.spread is None or self.spread_favorite_team_id is None:
+            return None
+
+        # Calculate the actual margin
+        if self.spread_favorite_team_id == self.team1_id:
+            # Team1 is favored
+            margin = self.team1_score - self.team2_score
+            # Team1 covers if they win by MORE than the spread
+            if margin > self.spread:
+                return self.team1_id
+            else:
+                return self.team2_id
+        else:
+            # Team2 is favored
+            margin = self.team2_score - self.team1_score
+            # Team2 covers if they win by MORE than the spread
+            if margin > self.spread:
+                return self.team2_id
+            else:
+                return self.team1_id
+
     def __repr__(self):
         return f"<Game {self.year} R{self.round}: {self.team1_id} vs {self.team2_id} ({self.status})>"
