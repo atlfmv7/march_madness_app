@@ -11,18 +11,7 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
-  <style>
-    .team-row:hover {
-      background-color: #f8f9fa;
-    }
-    .complete-badge {
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body class="bg-light">
   <nav class="navbar navbar-dark bg-dark">
@@ -64,15 +53,15 @@
             <h5 class="card-title">⚡ Quick Actions</h5>
             <div class="btn-group" role="group">
               <!-- Random Assignment -->
-              <form method="post" action="{{ url_for('admin_draft_random') }}" style="display: inline;" onsubmit="return confirm('Randomly assign all teams? This will overwrite any existing assignments.');">
+              <form method="post" action="{{ url_for('admin_draft_random') }}" class="inline-form" onsubmit="return confirm('Randomly assign all teams? This will overwrite any existing assignments.');">
                 <input type="hidden" name="year" value="{{ year }}">
                 <button type="submit" class="btn btn-success">
                   🎲 Random Assignment
                 </button>
               </form>
-              
+
               <!-- Reset -->
-              <form method="post" action="{{ url_for('admin_draft_reset') }}" style="display: inline; margin-left: 10px;" onsubmit="return confirm('Clear all assignments? This cannot be undone.');">
+              <form method="post" action="{{ url_for('admin_draft_reset') }}" class="inline-form-with-margin" onsubmit="return confirm('Clear all assignments? This cannot be undone.');">
                 <input type="hidden" name="year" value="{{ year }}">
                 <button type="submit" class="btn btn-warning">
                   🔄 Reset All
@@ -110,7 +99,7 @@
                     <p class="card-text small mb-0">
                       <strong>{{ assignment_stats[participant.id].total }}/4</strong> teams
                       <br>
-                      <span class="text-muted" style="font-size: 0.75rem;">
+                      <span class="text-muted region-text-small">
                         E:{{ assignment_stats[participant.id].regions.East }}
                         W:{{ assignment_stats[participant.id].regions.West }}
                         S:{{ assignment_stats[participant.id].regions.South }}
@@ -140,12 +129,12 @@
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
-              <table class="table table-sm table-hover mb-0">
+              <table class="table table-sm table-hover mb-0 draft-table">
                 <thead class="table-light">
                   <tr>
-                    <th style="width: 5%">Seed</th>
-                    <th style="width: 40%">Team</th>
-                    <th style="width: 55%">Assign To</th>
+                    <th>Seed</th>
+                    <th>Team</th>
+                    <th>Assign To</th>
                   </tr>
                 </thead>
                 <tbody>

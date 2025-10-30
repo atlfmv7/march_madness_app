@@ -11,6 +11,7 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body class="bg-light">
   <nav class="navbar navbar-dark bg-dark">
@@ -107,13 +108,13 @@
           <div class="card-body">
             {% if participants %}
               <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover participants-table">
                   <thead>
                     <tr>
-                      <th style="width: 5%">#</th>
-                      <th style="width: 35%">Name</th>
-                      <th style="width: 35%">Email</th>
-                      <th style="width: 25%">Actions</th>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -137,10 +138,10 @@
                         </button>
                         
                         <!-- Delete Button -->
-                        <form 
-                          method="post" 
+                        <form
+                          method="post"
                           action="{{ url_for('admin_participants_delete', participant_id=participant.id) }}"
-                          style="display: inline;"
+                          class="inline-form"
                           onsubmit="return confirm('Delete {{ participant.name }}? This cannot be undone.');"
                         >
                           <button type="submit" class="btn btn-sm btn-outline-danger">
