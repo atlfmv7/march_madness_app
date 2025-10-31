@@ -34,7 +34,7 @@
 
     <!-- Quick Links -->
     <div class="row mb-4">
-      <div class="col-md-4 mb-3">
+      <div class="col-md-3 mb-3">
         <div class="card shadow-sm">
           <div class="card-body">
             <h5 class="card-title">👥 Manage Participants</h5>
@@ -52,7 +52,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-4 mb-3">
+      <div class="col-md-3 mb-3">
         <div class="card shadow-sm">
           <div class="card-body">
             <h5 class="card-title">🎯 Assign Teams (Draft)</h5>
@@ -72,7 +72,28 @@
           </div>
         </div>
       </div>
-      <div class="col-md-4 mb-3">
+      <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-success">
+          <div class="card-body">
+            <h5 class="card-title">🎲 Simulate Tournament</h5>
+            <p class="card-text text-muted">
+              Simulate games with realistic scores for testing.
+              <span class="badge bg-success">Testing Only</span>
+            </p>
+            <form method="post" action="{{ url_for('admin_simulate_tournament') }}" class="mb-2">
+              <input type="hidden" name="year" value="{{ year }}">
+              <input type="hidden" name="action" value="simulate_next">
+              <button type="submit" class="btn btn-success btn-sm w-100">Simulate Next Round</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_simulate_tournament') }}" onsubmit="return confirm('🎲 This will simulate all remaining games in the tournament. Continue?');">
+              <input type="hidden" name="year" value="{{ year }}">
+              <input type="hidden" name="action" value="simulate_all">
+              <button type="submit" class="btn btn-outline-success btn-sm w-100">Simulate Entire Tournament</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
         <div class="card shadow-sm border-danger">
           <div class="card-body">
             <h5 class="card-title">🔄 Reset Test Data</h5>

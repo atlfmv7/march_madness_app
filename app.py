@@ -674,6 +674,141 @@ def create_app() -> Flask:
                         game.team1_owner_id = team1.initial_owner_id
                         game.team2_owner_id = team2.initial_owner_id
 
+    @app.route("/admin/simulate_tournament", methods=["POST"])
+    def admin_simulate_tournament():
+        """Simulate tournament games."""
+        from flask import request, redirect, url_for, flash
+        import random
+
+        action = request.form.get("action")
+        year = request.form.get("year", type=int) or datetime.now(timezone.utc).year
+
+        try:
+            if action == "simulate_all":
+                # Simulate entire tournament
+                print(f"\n🏆 Simulating entire {year} tournament...")
+
+                rounds = [64, 32, 16, 8, 4, 2]
+                total_games = 0
+
+                for round_num in rounds:
+                    games = (
+                        Game.query
+                        .filter_by(year=year, round=str(round_num), status="Scheduled")
+                        .all()
+                    )
+
+                    if not games:
+                        break
+
+                    for game in games:
+                        if game.team1 and game.team2:
+                            _simulate_single_game(game)
+                            total_games += 1
+
+                # Check for champion
+                championship_game = (
+                    Game.query
+                    .filter_by(year=year, round="2", status="Final")
+                    .first()
+                )
+
+                if championship_game and championship_game.winner_id:
+                    champion = db.session.get(Team, championship_game.winner_id)
+                    flash(f"🏆 Tournament Complete! Champion: {champion.name} (Seed {champion.seed}) - Owner: {champion.current_owner.name if champion.current_owner else 'Unknown'}", "success")
+                else:
+                    flash(f"✅ Simulated {total_games} games successfully!", "success")
+
+            elif action == "simulate_next":
+                # Simulate next available round
+                rounds = [64, 32, 16, 8, 4, 2]
+                simulated = False
+
+                for round_num in rounds:
+                    games = (
+                        Game.query
+                        .filter_by(year=year, round=str(round_num), status="Scheduled")
+                        .all()
+                    )
+
+                    if games:
+                        count = 0
+                        for game in games:
+                            if game.team1 and game.team2:
+                                _simulate_single_game(game)
+                                count += 1
+
+                        flash(f"✅ Simulated Round of {round_num} ({count} games)", "success")
+                        simulated = True
+                        break
+
+                if not simulated:
+                    flash("⚠️ No scheduled games to simulate", "warning")
+
+            else:
+                flash("Invalid action", "error")
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f"❌ Error simulating tournament: {str(e)}", "error")
+            print(f"❌ Error: {e}")
+            import traceback
+            traceback.print_exc()
+
+        return redirect(url_for("admin"))
+
+    def _simulate_single_game(game):
+        """Helper to simulate a single game."""
+        import random
+        from bracket_logic import evaluate_and_finalize_game
+
+        # Set game owner fields if not set
+        if game.team1_owner_id is None:
+            game.team1_owner_id = game.team1.current_owner_id
+        if game.team2_owner_id is None:
+            game.team2_owner_id = game.team2.current_owner_id
+
+        # Set spread if not already set
+        if not game.spread or not game.spread_favorite_team_id:
+            if game.team1.seed < game.team2.seed:
+                seed_diff = game.team2.seed - game.team1.seed
+                game.spread = round(min(seed_diff * 1.5, 15.0), 1)
+                game.spread_favorite_team_id = game.team1.id
+            elif game.team2.seed < game.team1.seed:
+                seed_diff = game.team1.seed - game.team2.seed
+                game.spread = round(min(seed_diff * 1.5, 15.0), 1)
+                game.spread_favorite_team_id = game.team2.id
+            else:
+                game.spread = 0.0
+                game.spread_favorite_team_id = game.team1.id
+
+        # Generate realistic scores (50-95 range)
+        score1 = random.randint(55, 90)
+        score2 = random.randint(55, 90)
+
+        # Ensure no tie
+        while score1 == score2:
+            score2 = random.randint(55, 90)
+
+        # Favor lower seeds (65% chance to win)
+        if game.team1.seed < game.team2.seed:
+            if random.random() > 0.35:
+                if score2 > score1:
+                    score1, score2 = score2, score1
+        elif game.team2.seed < game.team1.seed:
+            if random.random() > 0.35:
+                if score1 > score2:
+                    score1, score2 = score2, score1
+
+        # Set scores and finalize
+        game.team1_score = score1
+        game.team2_score = score2
+        game.status = "Final"
+        db.session.commit()
+
+        # Evaluate and advance winner
+        evaluate_and_finalize_game(game.id)
+
     @app.route("/bracket")
     def bracket():
         """Visual bracket tree display."""
