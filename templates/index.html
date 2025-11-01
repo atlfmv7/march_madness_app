@@ -84,6 +84,7 @@
             <table class="table table-sm align-middle games-table">
               <thead>
                 <tr>
+                  <th>Game Time</th>
                   <th>Team 1</th>
                   <th>Team 2</th>
                   <th>Spread</th>
@@ -94,6 +95,13 @@
               <tbody>
                 {% for g in games %}
                 <tr>
+                  <td>
+                    {% if g.game_time %}
+                    <div class="small">{{ format_game_time(g.game_time) }}</div>
+                    {% else %}
+                    <span class="text-muted small">TBD</span>
+                    {% endif %}
+                  </td>
                   <td>
                     <div class="fw-semibold">
                       {{ g.team1.name }}
@@ -124,11 +132,6 @@
                     {% if g.score_label() %}
                     <div class="small text-muted">
                       Score: {{ g.score_label() }}
-                    </div>
-                    {% endif %}
-                    {% if g.game_time and g.status == "Scheduled" %}
-                    <div class="small text-muted" title="{{ g.game_time }}">
-                      {{ format_game_time(g.game_time) }}
                     </div>
                     {% endif %}
                   </td>
