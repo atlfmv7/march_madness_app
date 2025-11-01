@@ -520,7 +520,14 @@ def create_app() -> Flask:
                 ("64", 32), ("32", 16), ("16", 8), ("8", 4), ("4", 2), ("2", 1)
             ]
 
+            # Set game times for Round of 64 spread across today
+            # This allows the score ticker to display them
+            from datetime import timedelta
+            now = datetime.now(timezone.utc)
+            base_time = now.replace(hour=12, minute=0, second=0, microsecond=0)  # Start at noon
+
             games_by_round = {}
+            game_counter = 0
             for round_name, count in BRACKET_STRUCTURE:
                 games_by_round[round_name] = []
                 for i in range(count):
@@ -528,11 +535,20 @@ def create_app() -> Flask:
                     if round_name in ["64", "32", "16", "8"]:
                         region = REGIONS[i % len(REGIONS)]
 
+                    # Set game_time for Round of 64 games (spread throughout the day)
+                    # Other rounds will have game_time set when simulated
+                    game_time = None
+                    if round_name == "64":
+                        # Spread 32 games across 8 hours (4 games per hour = every 15 min)
+                        game_time = base_time + timedelta(minutes=game_counter * 15)
+                        game_counter += 1
+
                     game = Game(
                         round=round_name,
                         region=region,
                         year=year,
-                        status="Scheduled"
+                        status="Scheduled",
+                        game_time=game_time
                     )
                     db.session.add(game)
                     games_by_round[round_name].append(game)
@@ -850,6 +866,10 @@ def create_app() -> Flask:
                 # If team 1 is winning, swap scores to make team 2 win
                 if score1 > score2:
                     score1, score2 = score2, score1
+
+        # Set game time to now if not already set (for score ticker display)
+        if not game.game_time:
+            game.game_time = datetime.now(timezone.utc)
 
         # Record final scores and mark game as complete
         game.team1_score = score1
