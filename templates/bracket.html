@@ -29,6 +29,59 @@
     </div>
   </div>
 
+  <!-- Score Ticker -->
+  {% if todays_games %}
+  <div class="score-ticker">
+    <div class="ticker-content">
+      {% for game in todays_games %}
+      <div class="ticker-game">
+        <span class="ticker-status {% if game.status == 'Final' %}final{% elif game.status == 'In Progress' %}live{% endif %}">
+          {{ game.status }}
+        </span>
+        <div class="ticker-matchup">
+          <div class="ticker-team">
+            <span class="ticker-team-name">{{ game.team1.name }}</span>
+            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team1_id %}winner{% endif %}">
+              {% if game.team1_score is not none %}{{ game.team1_score }}{% else %}—{% endif %}
+            </span>
+          </div>
+          <div class="ticker-team">
+            <span class="ticker-team-name">{{ game.team2.name }}</span>
+            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team2_id %}winner{% endif %}">
+              {% if game.team2_score is not none %}{{ game.team2_score }}{% else %}—{% endif %}
+            </span>
+          </div>
+        </div>
+        <span class="ticker-round">R{{ game.round }}</span>
+      </div>
+      {% endfor %}
+      <!-- Duplicate content for seamless loop -->
+      {% for game in todays_games %}
+      <div class="ticker-game">
+        <span class="ticker-status {% if game.status == 'Final' %}final{% elif game.status == 'In Progress' %}live{% endif %}">
+          {{ game.status }}
+        </span>
+        <div class="ticker-matchup">
+          <div class="ticker-team">
+            <span class="ticker-team-name">{{ game.team1.name }}</span>
+            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team1_id %}winner{% endif %}">
+              {% if game.team1_score is not none %}{{ game.team1_score }}{% else %}—{% endif %}
+            </span>
+          </div>
+          <div class="ticker-team">
+            <span class="ticker-team-name">{{ game.team2.name }}</span>
+            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team2_id %}winner{% endif %}">
+              {% if game.team2_score is not none %}{{ game.team2_score }}{% else %}—{% endif %}
+            </span>
+          </div>
+        </div>
+        <span class="ticker-round">R{{ game.round }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="bracket-wrapper">
     <div class="bracket-header">
       <div class="bracket-title">🏀 {{ selected_year }} NCAA Tournament</div>
@@ -42,6 +95,45 @@
       </form>
       {% endif %}
     </div>
+
+    <!-- Tournament Stats -->
+    {% if high_score or low_score %}
+    <div class="tournament-stats">
+      {% if high_score %}
+      <div class="stat-card high-score">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-details">
+          <div class="stat-label">Tournament High Score</div>
+          <div class="stat-value">{{ high_score.score }} points</div>
+          <div class="stat-info">
+            <strong>{{ high_score.team.name }}</strong> (Seed {{ high_score.team.seed }})
+            <br>
+            Owner: <strong>{{ high_score.owner.name if high_score.owner else "Unknown" }}</strong>
+            <br>
+            <span class="stat-round">Round of {{ high_score.round }}</span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if low_score %}
+      <div class="stat-card low-score">
+        <div class="stat-icon">❄️</div>
+        <div class="stat-details">
+          <div class="stat-label">Tournament Low Score</div>
+          <div class="stat-value">{{ low_score.score }} points</div>
+          <div class="stat-info">
+            <strong>{{ low_score.team.name }}</strong> (Seed {{ low_score.team.seed }})
+            <br>
+            Owner: <strong>{{ low_score.owner.name if low_score.owner else "Unknown" }}</strong>
+            <br>
+            <span class="stat-round">Round of {{ low_score.round }}</span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
 
     <div class="bracket-container">
       <!-- LEFT HALF: East and South regions -->

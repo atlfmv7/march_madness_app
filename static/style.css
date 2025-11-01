@@ -174,6 +174,116 @@ body.bracket-page.light-mode .bracket-year-selector {
   border-color: #d0d7de;
 }
 
+/* Tournament Stats */
+.tournament-stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 0 auto 40px;
+  max-width: 800px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 300px;
+  background: linear-gradient(135deg, #1e1e30 0%, #2a2a40 100%);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.stat-card.high-score {
+  border-color: #ff6b6b;
+}
+
+.stat-card.low-score {
+  border-color: #4ecdc4;
+}
+
+.stat-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.stat-details {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.stat-card.high-score .stat-value {
+  color: #ff6b6b;
+}
+
+.stat-card.low-score .stat-value {
+  color: #4ecdc4;
+}
+
+.stat-info {
+  font-size: 0.85rem;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+.stat-round {
+  display: inline-block;
+  background: rgba(74, 144, 226, 0.2);
+  color: #4a90e2;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  margin-top: 5px;
+}
+
+/* Light mode tournament stats */
+body.bracket-page.light-mode .stat-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+body.bracket-page.light-mode .stat-label {
+  color: #6c757d;
+}
+
+body.bracket-page.light-mode .stat-value {
+  color: #212529;
+}
+
+body.bracket-page.light-mode .stat-card.high-score .stat-value {
+  color: #dc3545;
+}
+
+body.bracket-page.light-mode .stat-card.low-score .stat-value {
+  color: #17a2b8;
+}
+
+body.bracket-page.light-mode .stat-info {
+  color: #495057;
+}
+
+body.bracket-page.light-mode .stat-round {
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
 /* Left and Right bracket halves */
 .bracket-half {
   display: flex;
@@ -503,6 +613,154 @@ body.bracket-page.light-mode .nav-bar .btn-outline-light {
 body.bracket-page.light-mode .nav-bar .btn-outline-light:hover {
   background: #333;
   color: #fff;
+}
+
+/* Score Ticker */
+.score-ticker {
+  background: #1a1a2e;
+  border-top: 2px solid #4a90e2;
+  border-bottom: 2px solid #4a90e2;
+  padding: 10px 0;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.ticker-content {
+  display: flex;
+  animation: scroll-left 60s linear infinite;
+  gap: 40px;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-game {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.05);
+  padding: 8px 16px;
+  border-radius: 6px;
+  min-width: 280px;
+  flex-shrink: 0;
+}
+
+.ticker-status {
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: #666;
+  color: #fff;
+  min-width: 70px;
+  text-align: center;
+}
+
+.ticker-status.live {
+  background: #ff4444;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.ticker-status.final {
+  background: #28a745;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.ticker-matchup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.ticker-team {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticker-team-name {
+  font-size: 0.85rem;
+  color: #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticker-score {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #fff;
+  min-width: 30px;
+  text-align: right;
+}
+
+.ticker-score.winner {
+  color: #4a90e2;
+}
+
+.ticker-round {
+  font-size: 0.7rem;
+  color: #888;
+  padding: 3px 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+}
+
+/* Light mode score ticker */
+body.bracket-page.light-mode .score-ticker {
+  background: #f8f9fa;
+  border-color: #0d6efd;
+}
+
+body.bracket-page.light-mode .ticker-game {
+  background: rgba(0,0,0,0.03);
+}
+
+body.bracket-page.light-mode .ticker-status {
+  background: #6c757d;
+}
+
+body.bracket-page.light-mode .ticker-status.live {
+  background: #dc3545;
+}
+
+body.bracket-page.light-mode .ticker-status.final {
+  background: #198754;
+}
+
+body.bracket-page.light-mode .ticker-team-name {
+  color: #495057;
+}
+
+body.bracket-page.light-mode .ticker-score {
+  color: #212529;
+}
+
+body.bracket-page.light-mode .ticker-score.winner {
+  color: #0d6efd;
+}
+
+body.bracket-page.light-mode .ticker-round {
+  color: #6c757d;
+  background: rgba(0,0,0,0.05);
 }
 
 /* Theme toggle button */
