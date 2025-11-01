@@ -17,13 +17,15 @@
   <div class="nav-bar">
     <div class="container-fluid">
       <div class="d-flex justify-content-between align-items-center">
-        <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">← March Madness Madness</a>
+        <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">March Madness Madness</a>
         <div class="d-flex gap-2">
           <button id="themeToggle" class="theme-toggle" title="Toggle light/dark mode">
             <span id="themeIcon">☀️</span>
           </button>
-          <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light">Table View</a>
+          <a href="{{ url_for('table_view') }}" class="btn btn-sm btn-outline-light">Table View</a>
+          {% if is_local %}
           <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
+          {% endif %}
         </div>
       </div>
     </div>
