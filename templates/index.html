@@ -164,7 +164,19 @@
       {% endif %}
     </main>
 
-    <!-- Optional JS (we’ll use this later for auto-refresh, etc.) -->
+    <!-- Optional JS (we'll use this later for auto-refresh, etc.) -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+      // Set preference when user clicks "Visual Bracket" button
+      // This prevents auto-redirect back to table view on small screens
+      document.addEventListener('DOMContentLoaded', function() {
+        const bracketLink = document.querySelector('a[href="{{ url_for("home") }}"]');
+        if (bracketLink) {
+          bracketLink.addEventListener('click', function() {
+            sessionStorage.setItem('viewPreference', 'bracket');
+          });
+        }
+      });
+    </script>
   </body>
 </html>

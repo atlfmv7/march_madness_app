@@ -12,6 +12,25 @@
     crossorigin="anonymous"
   />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <script>
+    // Auto-redirect mobile/small screens to table view for better UX
+    (function() {
+      // Check if user manually navigated here (via clicking "Visual Bracket" button)
+      const fromTableView = sessionStorage.getItem('viewPreference') === 'bracket';
+
+      // Only redirect if:
+      // 1. Screen is small (< 1024px width)
+      // 2. User didn't manually choose bracket view
+      if (!fromTableView && window.innerWidth < 1024) {
+        // Set flag to prevent redirect when user clicks "Table View" button
+        sessionStorage.setItem('viewPreference', 'table');
+        window.location.href = "{{ url_for('table_view') }}";
+      } else {
+        // Clear preference to allow auto-redirect on next visit
+        sessionStorage.removeItem('viewPreference');
+      }
+    })();
+  </script>
 </head>
 <body class="bracket-page">
   <div class="nav-bar">
