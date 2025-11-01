@@ -992,21 +992,22 @@ def create_app() -> Flask:
         completed_games = [g for g in games if g.status == "Final"]
 
         if completed_games:
-            # Find all individual scores with team and owner info
+            # Find all individual scores with team and original owner info
+            # Uses initial_owner_id so the original owner gets credit for high/low scores
             all_scores = []
             for game in completed_games:
                 if game.team1_score is not None:
                     all_scores.append({
                         'score': game.team1_score,
                         'team': game.team1,
-                        'owner_id': game.team1_owner_id,
+                        'owner_id': game.team1.initial_owner_id,
                         'game': game
                     })
                 if game.team2_score is not None:
                     all_scores.append({
                         'score': game.team2_score,
                         'team': game.team2,
-                        'owner_id': game.team2_owner_id,
+                        'owner_id': game.team2.initial_owner_id,
                         'game': game
                     })
 
