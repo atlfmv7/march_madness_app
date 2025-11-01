@@ -1105,8 +1105,31 @@ def create_app() -> Flask:
             # Convert to ET
             et_time = dt.astimezone(ZoneInfo("America/New_York"))
             return et_time.strftime("%a, %b %d at %I:%M %p ET")
-        
-        return dict(url_with_year=url_with_year, format_game_time=format_game_time)
+
+        def short_game_time(dt):
+            """Format a datetime in compact format for bracket display (e.g., '11/1 - 8am')."""
+            if not dt:
+                return None
+            from datetime import timezone
+            from zoneinfo import ZoneInfo
+            # Ensure timezone aware
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            # Convert to ET
+            et_time = dt.astimezone(ZoneInfo("America/New_York"))
+            # Format as "M/D - Ham" or "M/D - Hpm"
+            hour = et_time.hour
+            if hour == 0:
+                time_str = "12am"
+            elif hour < 12:
+                time_str = f"{hour}am"
+            elif hour == 12:
+                time_str = "12pm"
+            else:
+                time_str = f"{hour - 12}pm"
+            return f"{et_time.month}/{et_time.day} - {time_str}"
+
+        return dict(url_with_year=url_with_year, format_game_time=format_game_time, short_game_time=short_game_time)
 
     @app.cli.command("eval-game")
     def eval_game_cmd():
