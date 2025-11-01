@@ -43,6 +43,45 @@
       {% endif %}
     </div>
 
+    <!-- Tournament Stats -->
+    {% if high_score or low_score %}
+    <div class="tournament-stats">
+      {% if high_score %}
+      <div class="stat-card high-score">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-details">
+          <div class="stat-label">Tournament High Score</div>
+          <div class="stat-value">{{ high_score.score }} points</div>
+          <div class="stat-info">
+            <strong>{{ high_score.team.name }}</strong> (Seed {{ high_score.team.seed }})
+            <br>
+            Owner: <strong>{{ high_score.owner.name if high_score.owner else "Unknown" }}</strong>
+            <br>
+            <span class="stat-round">Round of {{ high_score.round }}</span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if low_score %}
+      <div class="stat-card low-score">
+        <div class="stat-icon">❄️</div>
+        <div class="stat-details">
+          <div class="stat-label">Tournament Low Score</div>
+          <div class="stat-value">{{ low_score.score }} points</div>
+          <div class="stat-info">
+            <strong>{{ low_score.team.name }}</strong> (Seed {{ low_score.team.seed }})
+            <br>
+            Owner: <strong>{{ low_score.owner.name if low_score.owner else "Unknown" }}</strong>
+            <br>
+            <span class="stat-round">Round of {{ low_score.round }}</span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
     <div class="bracket-container">
       <!-- LEFT HALF: East and South regions -->
       <div class="bracket-half left">
