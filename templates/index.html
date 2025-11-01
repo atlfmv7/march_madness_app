@@ -31,10 +31,12 @@
   <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark">
       <div class="container">
-        <span class="navbar-brand mb-0 h1">March Madness Madness</span>
+        <span class="navbar-brand mb-0 h1">March Madness Madness - Table View</span>
         <div>
-          <a href="{{ url_for('bracket') }}" class="btn btn-sm btn-outline-light me-2">Visual Bracket</a>
+          <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light me-2">Visual Bracket</a>
+          {% if is_local %}
           <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
+          {% endif %}
         </div>
       </div>
     </nav>
