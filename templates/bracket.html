@@ -60,19 +60,24 @@
           {{ game.status }}
         </span>
         <div class="ticker-matchup">
-          <div class="ticker-team">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team1_score > game.team2_score %}live-leader{% endif %}">
             <span class="ticker-team-name">{{ game.team1.name }}</span>
-            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team1_id %}winner{% endif %}">
+            <span class="ticker-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+            <span class="ticker-score">
               {% if game.team1_score is not none %}{{ game.team1_score }}{% else %}—{% endif %}
             </span>
           </div>
-          <div class="ticker-team">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team2_score > game.team1_score %}live-leader{% endif %}">
             <span class="ticker-team-name">{{ game.team2.name }}</span>
-            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team2_id %}winner{% endif %}">
+            <span class="ticker-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+            <span class="ticker-score">
               {% if game.team2_score is not none %}{{ game.team2_score }}{% else %}—{% endif %}
             </span>
           </div>
         </div>
+        {% if game.spread %}
+        <span class="ticker-spread">{{ game.spread_label() }}</span>
+        {% endif %}
         <span class="ticker-round">R{{ game.round }}</span>
       </div>
       {% endfor %}
@@ -83,19 +88,24 @@
           {{ game.status }}
         </span>
         <div class="ticker-matchup">
-          <div class="ticker-team">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team1_score > game.team2_score %}live-leader{% endif %}">
             <span class="ticker-team-name">{{ game.team1.name }}</span>
-            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team1_id %}winner{% endif %}">
+            <span class="ticker-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+            <span class="ticker-score">
               {% if game.team1_score is not none %}{{ game.team1_score }}{% else %}—{% endif %}
             </span>
           </div>
-          <div class="ticker-team">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team2_score > game.team1_score %}live-leader{% endif %}">
             <span class="ticker-team-name">{{ game.team2.name }}</span>
-            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team2_id %}winner{% endif %}">
+            <span class="ticker-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+            <span class="ticker-score">
               {% if game.team2_score is not none %}{{ game.team2_score }}{% else %}—{% endif %}
             </span>
           </div>
         </div>
+        {% if game.spread %}
+        <span class="ticker-spread">{{ game.spread_label() }}</span>
+        {% endif %}
         <span class="ticker-round">R{{ game.round }}</span>
       </div>
       {% endfor %}

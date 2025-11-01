@@ -664,7 +664,7 @@ body.bracket-page.light-mode .nav-bar .btn-outline-light:hover {
   background: rgba(255,255,255,0.05);
   padding: 8px 16px;
   border-radius: 6px;
-  min-width: 280px;
+  min-width: 380px;
   flex-shrink: 0;
 }
 
@@ -709,15 +709,43 @@ body.bracket-page.light-mode .nav-bar .btn-outline-light:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Highlight spread winner for completed games (green) */
+.ticker-team.spread-winner {
+  background: rgba(40, 167, 69, 0.3);
+  border: 1px solid rgba(40, 167, 69, 0.6);
+}
+
+/* Highlight current leader for in-progress games (yellow/orange) */
+.ticker-team.live-leader {
+  background: rgba(255, 193, 7, 0.3);
+  border: 1px solid rgba(255, 193, 7, 0.6);
 }
 
 .ticker-team-name {
   font-size: 0.85rem;
   color: #ccc;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 80px;
+}
+
+.ticker-owner {
+  font-size: 0.7rem;
+  color: #999;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 60px;
 }
 
 .ticker-score {
@@ -728,8 +756,14 @@ body.bracket-page.light-mode .nav-bar .btn-outline-light:hover {
   text-align: right;
 }
 
-.ticker-score.winner {
+.ticker-spread {
+  font-size: 0.7rem;
   color: #4a90e2;
+  font-weight: bold;
+  padding: 3px 8px;
+  background: rgba(74, 144, 226, 0.2);
+  border-radius: 3px;
+  white-space: nowrap;
 }
 
 .ticker-round {
@@ -762,16 +796,31 @@ body.bracket-page.light-mode .ticker-status.final {
   background: #198754;
 }
 
+body.bracket-page.light-mode .ticker-team.spread-winner {
+  background: rgba(25, 135, 84, 0.2);
+  border: 1px solid rgba(25, 135, 84, 0.5);
+}
+
+body.bracket-page.light-mode .ticker-team.live-leader {
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+}
+
 body.bracket-page.light-mode .ticker-team-name {
   color: #495057;
+}
+
+body.bracket-page.light-mode .ticker-owner {
+  color: #6c757d;
 }
 
 body.bracket-page.light-mode .ticker-score {
   color: #212529;
 }
 
-body.bracket-page.light-mode .ticker-score.winner {
+body.bracket-page.light-mode .ticker-spread {
   color: #0d6efd;
+  background: rgba(13, 110, 253, 0.1);
 }
 
 body.bracket-page.light-mode .ticker-round {
@@ -987,7 +1036,7 @@ body.bracket-page.light-mode .theme-toggle:hover {
   }
 
   .ticker-game {
-    min-width: 240px;
+    min-width: 320px;
     padding: 6px 12px;
     gap: 8px;
   }
@@ -998,12 +1047,28 @@ body.bracket-page.light-mode .theme-toggle:hover {
     padding: 2px 6px;
   }
 
+  .ticker-team {
+    gap: 6px;
+    padding: 3px 6px;
+  }
+
   .ticker-team-name {
     font-size: 0.75rem;
+    min-width: 60px;
+  }
+
+  .ticker-owner {
+    font-size: 0.6rem;
+    min-width: 50px;
   }
 
   .ticker-score {
     font-size: 0.8rem;
+  }
+
+  .ticker-spread {
+    font-size: 0.6rem;
+    padding: 2px 6px;
   }
 
   .ticker-round {
@@ -1168,7 +1233,7 @@ body.bracket-page.light-mode .theme-toggle:hover {
   }
 
   .ticker-game {
-    min-width: 200px;
+    min-width: 280px;
   }
 }
 
