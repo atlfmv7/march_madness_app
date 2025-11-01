@@ -11,266 +11,18 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
-  <style>
-    body {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      min-height: 100vh;
-      color: #fff;
-    }
-    
-    .bracket-wrapper {
-      overflow-x: auto;
-      padding: 20px;
-    }
-    
-    /* Main bracket container - horizontal layout */
-    .bracket-container {
-      min-width: 2400px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 40px 20px;
-      gap: 40px;
-    }
-    
-    /* Header */
-    .bracket-header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-    
-    .bracket-title {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: #fff;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-      margin-bottom: 10px;
-    }
-    
-    /* Left and Right bracket halves */
-    .bracket-half {
-      display: flex;
-      flex-direction: column;
-      gap: 100px;
-    }
-    
-    /* Region Container */
-    .region-bracket {
-      display: flex;
-      gap: 25px;
-      position: relative;
-      align-items: center;
-    }
-    
-    /* Both sides use normal row direction */
-    .bracket-half.left .region-bracket,
-    .bracket-half.right .region-bracket {
-      flex-direction: row;
-    }
-    
-    .region-name {
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.3rem;
-      font-weight: bold;
-      color: #4a90e2;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      white-space: nowrap;
-    }
-    
-    /* Round Columns */
-    .round-column {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      min-width: 180px;
-    }
-    
-    .round-label {
-      text-align: center;
-      font-size: 0.65rem;
-      font-weight: bold;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
-    
-    /* Matchup Cards */
-    .matchup {
-      background: #1e1e30;
-      border: 2px solid #2a2a40;
-      border-radius: 6px;
-      margin: 6px 0;
-      position: relative;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      min-height: 60px;
-    }
-    
-    .matchup:hover {
-      border-color: #4a90e2;
-      box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
-    }
-    
-    .team {
-      padding: 8px 10px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      border-bottom: 1px solid #2a2a40;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .team:last-child {
-      border-bottom: none;
-    }
-    
-    .team:hover {
-      background: rgba(74, 144, 226, 0.1);
-    }
-    
-    .team.winner {
-      background: rgba(76, 175, 80, 0.2);
-      font-weight: bold;
-    }
-    
-    .team.loser {
-      opacity: 0.4;
-    }
-    
-    .seed {
-      background: #4a90e2;
-      color: white;
-      font-size: 0.65rem;
-      font-weight: bold;
-      padding: 2px 5px;
-      border-radius: 3px;
-      min-width: 20px;
-      text-align: center;
-    }
-    
-    .team-name {
-      flex: 1;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .score {
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #4a90e2;
-      min-width: 25px;
-      text-align: right;
-    }
-    
-    .team.winner .score {
-      color: #4caf50;
-    }
-    
-    /* Empty slots */
-    .empty-slot {
-      padding: 10px;
-      text-align: center;
-      color: #666;
-      font-style: italic;
-      font-size: 0.75rem;
-    }
-    
-    /* Center section - Final Four & Championship */
-    .center-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 40px;
-      min-width: 320px;
-    }
-    
-    .finals-container {
-      display: flex;
-      flex-direction: column;
-      gap: 30px;
-      width: 100%;
-    }
-    
-    .finals-section {
-      background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-    }
-    
-    .finals-title {
-      text-align: center;
-      font-size: 1.3rem;
-      font-weight: bold;
-      color: white;
-      margin-bottom: 15px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    
-    .champion-section {
-      text-align: center;
-      padding: 35px 25px;
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(255, 215, 0, 0.5);
-      width: 100%;
-    }
-    
-    .champion-title {
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: #1a1a2e;
-      margin-bottom: 15px;
-    }
-    
-    .champion-team {
-      font-size: 2.2rem;
-      font-weight: bold;
-      color: #1a1a2e;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .champion-owner {
-      font-size: 1.1rem;
-      color: #333;
-      margin-top: 8px;
-    }
-    
-    /* Navigation */
-    .nav-bar {
-      background: rgba(0,0,0,0.3);
-      padding: 15px 0;
-      margin-bottom: 20px;
-    }
-    
-    /* Responsive */
-    @media (max-width: 2400px) {
-      .bracket-container {
-        min-width: 2000px;
-      }
-      .round-column {
-        min-width: 160px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
-<body>
+<body class="bracket-page">
   <div class="nav-bar">
     <div class="container-fluid">
       <div class="d-flex justify-content-between align-items-center">
         <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">← March Madness Madness</a>
-        <div>
-          <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light me-2">Table View</a>
+        <div class="d-flex gap-2">
+          <button id="themeToggle" class="theme-toggle" title="Toggle light/dark mode">
+            <span id="themeIcon">☀️</span>
+          </button>
+          <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light">Table View</a>
           <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
         </div>
       </div>
@@ -282,7 +34,7 @@
       <div class="bracket-title">🏀 {{ selected_year }} NCAA Tournament</div>
       {% if years and years|length > 1 %}
       <form method="get" class="d-inline-block mt-2">
-        <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="background: #1e1e30; color: #fff; border-color: #4a90e2;">
+        <select name="year" class="form-select form-select-sm bracket-year-selector" onchange="this.form.submit()">
           {% for y in years %}
           <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
           {% endfor %}
@@ -301,24 +53,33 @@
           
           <!-- Round of 64 -->
           {% if "64" in regions["East"] %}
-          <div class="round-column">
+          <div class="round-column round-64">
             <div class="round-label">Round 1</div>
             {% for game in regions["East"]["64"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -331,24 +92,33 @@
 
           <!-- Round of 32 -->
           {% if "32" in regions["East"] %}
-          <div class="round-column">
+          <div class="round-column round-32">
             <div class="round-label">Round 2</div>
             {% for game in regions["East"]["32"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -361,24 +131,33 @@
 
           <!-- Sweet 16 -->
           {% if "16" in regions["East"] %}
-          <div class="round-column">
+          <div class="round-column round-16">
             <div class="round-label">Sweet 16</div>
             {% for game in regions["East"]["16"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -391,24 +170,33 @@
 
           <!-- Elite 8 -->
           {% if "8" in regions["East"] %}
-          <div class="round-column">
+          <div class="round-column round-8">
             <div class="round-label">Elite 8</div>
             {% for game in regions["East"]["8"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -428,24 +216,33 @@
           
           <!-- Round of 64 -->
           {% if "64" in regions["South"] %}
-          <div class="round-column">
+          <div class="round-column round-64">
             <div class="round-label">Round 1</div>
             {% for game in regions["South"]["64"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -458,24 +255,33 @@
 
           <!-- Round of 32 -->
           {% if "32" in regions["South"] %}
-          <div class="round-column">
+          <div class="round-column round-32">
             <div class="round-label">Round 2</div>
             {% for game in regions["South"]["32"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -488,24 +294,33 @@
 
           <!-- Sweet 16 -->
           {% if "16" in regions["South"] %}
-          <div class="round-column">
+          <div class="round-column round-16">
             <div class="round-label">Sweet 16</div>
             {% for game in regions["South"]["16"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -522,20 +337,29 @@
             <div class="round-label">Elite 8</div>
             {% for game in regions["South"]["8"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -559,20 +383,29 @@
             <div class="finals-title">🏆 FINAL FOUR</div>
             {% for game in ff_games %}
             <div class="matchup mb-2">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -588,19 +421,19 @@
             {% set champ_games = regions.get("Championship", {}).get("2", regions.get(None, {}).get("2", [])) %}
             {% if champ_games %}
               {% set championship = champ_games[0] %}
-              {% if championship.status == 'Final' and championship.winner_team_id %}
+              {% if championship.status == 'Final' and championship.spread_winner_team_id() %}
           <div class="champion-section">
             <div class="champion-title">🏆 CHAMPION 🏆</div>
             <div class="champion-team">
-              {% if championship.winner_team_id == championship.team1_id %}
+              {% if championship.spread_winner_team_id() == championship.team1_id %}
                 {{ championship.team1.name }}
               {% else %}
                 {{ championship.team2.name }}
               {% endif %}
             </div>
             <div class="champion-owner">
-              Owner: 
-              {% if championship.winner_team_id == championship.team1_id %}
+              Owner:
+              {% if championship.spread_winner_team_id() == championship.team1_id %}
                 {{ championship.team1_owner.name if championship.team1_owner else "Unknown" }}
               {% else %}
                 {{ championship.team2_owner.name if championship.team2_owner else "Unknown" }}
@@ -611,20 +444,29 @@
           <div class="finals-section">
             <div class="finals-title">CHAMPIONSHIP</div>
             <div class="matchup">
+              {% if championship.spread %}
+              <div class="matchup-spread">{{ championship.spread_label() }}</div>
+              {% endif %}
               {% if championship.team1 %}
-              <div class="team {% if championship.status == 'Final' and championship.winner_team_id == championship.team1_id %}winner{% elif championship.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if championship.status == 'Final' and championship.spread_winner_team_id() == championship.team1_id %}winner{% elif championship.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ championship.team1.seed }}</span>
-                <span class="team-name">{{ championship.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ championship.team1.name }}</span>
+                  <span class="team-owner">{{ championship.team1_owner.name if championship.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if championship.team1_score is not none %}{{ championship.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if championship.team2 %}
-              <div class="team {% if championship.status == 'Final' and championship.winner_team_id == championship.team2_id %}winner{% elif championship.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if championship.status == 'Final' and championship.spread_winner_team_id() == championship.team2_id %}winner{% elif championship.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ championship.team2.seed }}</span>
-                <span class="team-name">{{ championship.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ championship.team2.name }}</span>
+                  <span class="team-owner">{{ championship.team2_owner.name if championship.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if championship.team2_score is not none %}{{ championship.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -651,20 +493,29 @@
             <div class="round-label">Elite 8</div>
             {% for game in regions["West"]["8"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -677,24 +528,33 @@
 
           <!-- Sweet 16 -->
           {% if "16" in regions["West"] %}
-          <div class="round-column">
+          <div class="round-column round-16">
             <div class="round-label">Sweet 16</div>
             {% for game in regions["West"]["16"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -707,24 +567,33 @@
 
           <!-- Round of 32 -->
           {% if "32" in regions["West"] %}
-          <div class="round-column">
+          <div class="round-column round-32">
             <div class="round-label">Round 2</div>
             {% for game in regions["West"]["32"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -737,24 +606,33 @@
 
           <!-- Round of 64 -->
           {% if "64" in regions["West"] %}
-          <div class="round-column">
+          <div class="round-column round-64">
             <div class="round-label">Round 1</div>
             {% for game in regions["West"]["64"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -778,20 +656,29 @@
             <div class="round-label">Elite 8</div>
             {% for game in regions["Midwest"]["8"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -804,24 +691,33 @@
 
           <!-- Sweet 16 -->
           {% if "16" in regions["Midwest"] %}
-          <div class="round-column">
+          <div class="round-column round-16">
             <div class="round-label">Sweet 16</div>
             {% for game in regions["Midwest"]["16"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -834,24 +730,33 @@
 
           <!-- Round of 32 -->
           {% if "32" in regions["Midwest"] %}
-          <div class="round-column">
+          <div class="round-column round-32">
             <div class="round-label">Round 2</div>
             {% for game in regions["Midwest"]["32"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -864,24 +769,33 @@
 
           <!-- Round of 64 -->
           {% if "64" in regions["Midwest"] %}
-          <div class="round-column">
+          <div class="round-column round-64">
             <div class="round-label">Round 1</div>
             {% for game in regions["Midwest"]["64"] %}
             <div class="matchup">
+              {% if game.spread %}
+              <div class="matchup-spread">{{ game.spread_label() }}</div>
+              {% endif %}
               {% if game.team1 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team1.seed }}</span>
-                <span class="team-name">{{ game.team1.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team1.name }}</span>
+                  <span class="team-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team1_score is not none %}{{ game.team1_score }}{% endif %}</span>
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
-              
+
               {% if game.team2 %}
-              <div class="team {% if game.status == 'Final' and game.winner_team_id == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
+              <div class="team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}winner{% elif game.status == 'Final' %}loser{% endif %}">
                 <span class="seed">{{ game.team2.seed }}</span>
-                <span class="team-name">{{ game.team2.name }}</span>
+                <div class="team-info">
+                  <span class="team-name">{{ game.team2.name }}</span>
+                  <span class="team-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+                </div>
                 <span class="score">{% if game.team2_score is not none %}{{ game.team2_score }}{% endif %}</span>
               </div>
               {% else %}
@@ -898,5 +812,138 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Theme toggle functionality
+    (function() {
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      const body = document.body;
+
+      // Check for saved theme preference or default to light mode
+      const currentTheme = localStorage.getItem('bracketTheme') || 'light';
+
+      // Apply the current theme on page load
+      if (currentTheme === 'light') {
+        body.classList.add('light-mode');
+        themeIcon.textContent = '🌙';
+      } else {
+        themeIcon.textContent = '☀️';
+      }
+
+      // Toggle theme when button is clicked
+      themeToggle.addEventListener('click', function() {
+        body.classList.toggle('light-mode');
+
+        // Update icon and save preference
+        if (body.classList.contains('light-mode')) {
+          themeIcon.textContent = '🌙';
+          localStorage.setItem('bracketTheme', 'light');
+        } else {
+          themeIcon.textContent = '☀️';
+          localStorage.setItem('bracketTheme', 'dark');
+        }
+      });
+    })();
+
+    // Bracket alignment functionality
+    (function() {
+      function alignBracket() {
+        // Process each region
+        const regions = document.querySelectorAll('.region-bracket');
+
+        regions.forEach(region => {
+          // Get all round columns in this region
+          const round64 = region.querySelector('.round-64');
+          const round32 = region.querySelector('.round-32');
+          const round16 = region.querySelector('.round-16');
+          const round8 = region.querySelector('.round-8');
+
+          // Set height for each round column to accommodate absolutely positioned games
+          if (round64) {
+            const r64Games = round64.querySelectorAll('.matchup');
+            if (r64Games.length > 0) {
+              const totalHeight = Array.from(r64Games).reduce((sum, game) => {
+                return sum + game.offsetHeight + 12; // 12px is margin
+              }, 0);
+
+              if (round32) round32.style.minHeight = totalHeight + 'px';
+              if (round16) round16.style.minHeight = totalHeight + 'px';
+              if (round8) round8.style.minHeight = totalHeight + 'px';
+            }
+          }
+
+          // Align Round of 32 between Round of 64 games
+          if (round64 && round32) {
+            const r64Games = round64.querySelectorAll('.matchup');
+            const r32Games = round32.querySelectorAll('.matchup');
+
+            r32Games.forEach((game, index) => {
+              const parent1 = r64Games[index * 2];
+              const parent2 = r64Games[index * 2 + 1];
+
+              if (parent1 && parent2) {
+                const parent1Center = parent1.offsetTop + (parent1.offsetHeight / 2);
+                const parent2Center = parent2.offsetTop + (parent2.offsetHeight / 2);
+                const centerPoint = (parent1Center + parent2Center) / 2;
+                const gameTop = centerPoint - (game.offsetHeight / 2);
+
+                game.style.top = gameTop + 'px';
+              }
+            });
+          }
+
+          // Align Sweet 16 between Round of 32 games
+          if (round32 && round16) {
+            const r32Games = round32.querySelectorAll('.matchup');
+            const r16Games = round16.querySelectorAll('.matchup');
+
+            r16Games.forEach((game, index) => {
+              const parent1 = r32Games[index * 2];
+              const parent2 = r32Games[index * 2 + 1];
+
+              if (parent1 && parent2) {
+                const parent1Center = parseFloat(parent1.style.top || 0) + (parent1.offsetHeight / 2);
+                const parent2Center = parseFloat(parent2.style.top || 0) + (parent2.offsetHeight / 2);
+                const centerPoint = (parent1Center + parent2Center) / 2;
+                const gameTop = centerPoint - (game.offsetHeight / 2);
+
+                game.style.top = gameTop + 'px';
+              }
+            });
+          }
+
+          // Align Elite 8 between Sweet 16 games
+          if (round16 && round8) {
+            const r16Games = round16.querySelectorAll('.matchup');
+            const r8Games = round8.querySelectorAll('.matchup');
+
+            r8Games.forEach((game, index) => {
+              const parent1 = r16Games[index * 2];
+              const parent2 = r16Games[index * 2 + 1];
+
+              if (parent1 && parent2) {
+                const parent1Center = parseFloat(parent1.style.top || 0) + (parent1.offsetHeight / 2);
+                const parent2Center = parseFloat(parent2.style.top || 0) + (parent2.offsetHeight / 2);
+                const centerPoint = (parent1Center + parent2Center) / 2;
+                const gameTop = centerPoint - (game.offsetHeight / 2);
+
+                game.style.top = gameTop + 'px';
+              }
+            });
+          }
+        });
+      }
+
+      // Run alignment after page loads and images/fonts are ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', alignBracket);
+      } else {
+        alignBracket();
+      }
+
+      // Re-align on window resize
+      window.addEventListener('resize', alignBracket);
+    })();
+  </script>
 </body>
 </html>
