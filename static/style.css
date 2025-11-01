@@ -331,6 +331,67 @@ body.bracket-page.light-mode .region-name {
   position: relative;
 }
 
+/* ==================== CONNECTOR LINES ==================== */
+
+/* Horizontal lines from matchups to next round (LEFT BRACKET - East/South) */
+.bracket-half.left .round-column:not(:last-child) .matchup::after {
+  content: '';
+  position: absolute;
+  width: 25px; /* matches gap between columns */
+  height: 2px;
+  background: #4a90e2;
+  top: 50%;
+  right: -25px;
+  transform: translateY(-1px);
+  z-index: 0;
+}
+
+/* Horizontal lines from matchups to next round (RIGHT BRACKET - West/Midwest) */
+.bracket-half.right .round-column:not(:last-child) .matchup::after {
+  content: '';
+  position: absolute;
+  width: 25px;
+  height: 2px;
+  background: #4a90e2;
+  top: 50%;
+  left: -25px;
+  transform: translateY(-1px);
+  z-index: 0;
+}
+
+/* Vertical connector lines between pairs (LEFT BRACKET) */
+.bracket-half.left .round-column:not(:last-child) .matchup:nth-child(odd)::before {
+  content: '';
+  position: absolute;
+  width: 2px;
+  background: #4a90e2;
+  right: -25px;
+  z-index: 0;
+}
+
+/* Vertical connector lines between pairs (RIGHT BRACKET) */
+.bracket-half.right .round-column:not(:last-child) .matchup:nth-child(odd)::before {
+  content: '';
+  position: absolute;
+  width: 2px;
+  background: #4a90e2;
+  left: -25px;
+  z-index: 0;
+}
+
+/* Light mode connector lines */
+body.bracket-page.light-mode .matchup::after,
+body.bracket-page.light-mode .matchup::before {
+  background: #2563eb;
+}
+
+/* Calculate vertical line heights dynamically for each round */
+/* Use CSS custom property set by JavaScript for precise positioning */
+.round-column .matchup:nth-child(odd)::before {
+  top: 50%;
+  height: var(--connector-height, 0);
+}
+
 .round-label {
   text-align: center;
   font-size: 0.65rem;
@@ -912,6 +973,28 @@ body.bracket-page.light-mode .theme-toggle:hover {
     min-width: 140px;
   }
 
+  /* Adjust connector lines for smaller gaps */
+  .bracket-half.left .round-column:not(:last-child) .matchup::after,
+  .bracket-half.right .round-column:not(:last-child) .matchup::after {
+    width: 20px; /* Slightly shorter for tablet */
+  }
+
+  .bracket-half.left .round-column:not(:last-child) .matchup::after {
+    right: -20px;
+  }
+
+  .bracket-half.right .round-column:not(:last-child) .matchup::after {
+    left: -20px;
+  }
+
+  .bracket-half.left .round-column:not(:last-child) .matchup:nth-child(odd)::before {
+    right: -20px;
+  }
+
+  .bracket-half.right .round-column:not(:last-child) .matchup:nth-child(odd)::before {
+    left: -20px;
+  }
+
   /* Smaller matchups */
   .matchup {
     font-size: 0.85rem;
@@ -1038,6 +1121,31 @@ body.bracket-page.light-mode .theme-toggle:hover {
     min-height: 50px;
   }
 
+  /* Adjust connector lines for mobile */
+  .bracket-half.left .round-column:not(:last-child) .matchup::after,
+  .bracket-half.right .round-column:not(:last-child) .matchup::after {
+    width: 15px; /* Even shorter for mobile */
+    height: 1px; /* Thinner line */
+  }
+
+  .bracket-half.left .round-column:not(:last-child) .matchup::after {
+    right: -15px;
+  }
+
+  .bracket-half.right .round-column:not(:last-child) .matchup::after {
+    left: -15px;
+  }
+
+  .bracket-half.left .round-column:not(:last-child) .matchup:nth-child(odd)::before {
+    right: -15px;
+    width: 1px; /* Thinner vertical line */
+  }
+
+  .bracket-half.right .round-column:not(:last-child) .matchup:nth-child(odd)::before {
+    left: -15px;
+    width: 1px;
+  }
+
   .team {
     padding: 6px 8px;
     gap: 4px;
@@ -1153,6 +1261,25 @@ body.bracket-page.light-mode .theme-toggle:hover {
   .matchup {
     font-size: 0.7rem;
     min-height: 45px;
+  }
+
+  /* Connector lines for very small screens */
+  .bracket-half.left .round-column:not(:last-child) .matchup::after {
+    width: 12px;
+    right: -12px;
+  }
+
+  .bracket-half.right .round-column:not(:last-child) .matchup::after {
+    width: 12px;
+    left: -12px;
+  }
+
+  .bracket-half.left .round-column:not(:last-child) .matchup:nth-child(odd)::before {
+    right: -12px;
+  }
+
+  .bracket-half.right .round-column:not(:last-child) .matchup:nth-child(odd)::before {
+    left: -12px;
   }
 
   .team {

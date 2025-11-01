@@ -1036,6 +1036,10 @@
                 const gameTop = centerPoint - (game.offsetHeight / 2);
 
                 game.style.top = gameTop + 'px';
+
+                // Set vertical connector line height between paired Round 64 games
+                const verticalLineHeight = parent2Center - parent1Center;
+                parent1.style.setProperty('--connector-height', verticalLineHeight + 'px');
               }
             });
           }
@@ -1056,6 +1060,10 @@
                 const gameTop = centerPoint - (game.offsetHeight / 2);
 
                 game.style.top = gameTop + 'px';
+
+                // Set vertical connector line height between paired Round 32 games
+                const verticalLineHeight = parent2Center - parent1Center;
+                parent1.style.setProperty('--connector-height', verticalLineHeight + 'px');
               }
             });
           }
@@ -1076,6 +1084,10 @@
                 const gameTop = centerPoint - (game.offsetHeight / 2);
 
                 game.style.top = gameTop + 'px';
+
+                // Set vertical connector line height between paired Round 16 games
+                const verticalLineHeight = parent2Center - parent1Center;
+                parent1.style.setProperty('--connector-height', verticalLineHeight + 'px');
               }
             });
           }
