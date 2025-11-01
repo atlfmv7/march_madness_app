@@ -396,6 +396,22 @@ body.bracket-page.light-mode .matchup {
   z-index: 1;
 }
 
+.game-time {
+  font-size: 0.6rem;
+  color: #888;
+  text-align: center;
+  padding: 4px 0;
+  background: rgba(0,0,0,0.1);
+  border-top: 1px solid #2a2a40;
+}
+
+/* Light mode game-time */
+body.bracket-page.light-mode .game-time {
+  color: #666;
+  background: rgba(0,0,0,0.03);
+  border-top: 1px solid #d0d7de;
+}
+
 .team {
   padding: 8px 10px;
   display: flex;
