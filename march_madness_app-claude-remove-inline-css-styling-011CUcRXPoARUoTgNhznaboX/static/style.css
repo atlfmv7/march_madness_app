@@ -111,11 +111,18 @@ span.text-muted:has-text("Seed") {
 
 /* ==================== BRACKET PAGE STYLES ==================== */
 
-/* Bracket body background */
+/* Bracket body background - DARK MODE (default) */
 body.bracket-page {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   min-height: 100vh;
   color: #fff;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* LIGHT MODE */
+body.bracket-page.light-mode {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+  color: #333;
 }
 
 .bracket-wrapper {
@@ -147,11 +154,24 @@ body.bracket-page {
   margin-bottom: 10px;
 }
 
+/* Light mode bracket title */
+body.bracket-page.light-mode .bracket-title {
+  color: #1a1a2e;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
 /* Year selector on bracket page */
 .bracket-year-selector {
   background: #1e1e30;
   color: #fff;
   border-color: #4a90e2;
+}
+
+/* Light mode year selector */
+body.bracket-page.light-mode .bracket-year-selector {
+  background: #fff;
+  color: #333;
+  border-color: #d0d7de;
 }
 
 /* Left and Right bracket halves */
@@ -188,12 +208,17 @@ body.bracket-page {
   white-space: nowrap;
 }
 
+/* Light mode region name */
+body.bracket-page.light-mode .region-name {
+  color: #2563eb;
+}
+
 /* Round Columns */
 .round-column {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   min-width: 180px;
+  position: relative;
 }
 
 .round-label {
@@ -204,6 +229,8 @@ body.bracket-page {
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Matchup Cards */
@@ -215,11 +242,48 @@ body.bracket-page {
   position: relative;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   min-height: 60px;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* Round 64 uses normal flow */
+.round-column.round-64 .matchup {
+  position: relative;
+}
+
+/* Other rounds use absolute positioning (set by JavaScript) */
+.round-column.round-32 .matchup,
+.round-column.round-16 .matchup,
+.round-column.round-8 .matchup {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+/* Light mode matchup */
+body.bracket-page.light-mode .matchup {
+  background: #ffffff;
+  border: 2px solid #d0d7de;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .matchup:hover {
   border-color: #4a90e2;
   box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+}
+
+/* Matchup spread display */
+.matchup-spread {
+  position: absolute;
+  top: -10px;
+  right: 8px;
+  background: #4a90e2;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  z-index: 1;
 }
 
 .team {
@@ -230,6 +294,11 @@ body.bracket-page {
   border-bottom: 1px solid #2a2a40;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+/* Light mode team border */
+body.bracket-page.light-mode .team {
+  border-bottom: 1px solid #d0d7de;
 }
 
 .team:last-child {
@@ -245,8 +314,18 @@ body.bracket-page {
   font-weight: bold;
 }
 
+/* Light mode winner */
+body.bracket-page.light-mode .team.winner {
+  background: rgba(76, 175, 80, 0.15);
+}
+
 .team.loser {
   opacity: 0.4;
+}
+
+/* Light mode loser */
+body.bracket-page.light-mode .team.loser {
+  opacity: 0.5;
 }
 
 .seed {
@@ -260,14 +339,40 @@ body.bracket-page {
   text-align: center;
 }
 
-.team-name {
+/* Team info container (name + owner) */
+.team-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.team-name {
   font-size: 0.8rem;
   font-weight: 500;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Light mode team name */
+body.bracket-page.light-mode .team-name {
+  color: #333;
+}
+
+.team-owner {
+  font-size: 0.6rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Light mode team owner */
+body.bracket-page.light-mode .team-owner {
+  color: #666;
 }
 
 .score {
@@ -291,6 +396,11 @@ body.bracket-page {
   font-size: 0.75rem;
 }
 
+/* Light mode empty slot */
+body.bracket-page.light-mode .empty-slot {
+  color: #999;
+}
+
 /* Center section - Final Four & Championship */
 .center-section {
   display: flex;
@@ -312,6 +422,13 @@ body.bracket-page {
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Light mode finals section */
+body.bracket-page.light-mode .finals-section {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
 
 .finals-title {
@@ -331,6 +448,12 @@ body.bracket-page {
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(255, 215, 0, 0.5);
   width: 100%;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Light mode champion section */
+body.bracket-page.light-mode .champion-section {
+  box-shadow: 0 10px 40px rgba(255, 215, 0, 0.3);
 }
 
 .champion-title {
@@ -358,6 +481,54 @@ body.bracket-page {
   background: rgba(0,0,0,0.3);
   padding: 15px 0;
   margin-bottom: 20px;
+  transition: background 0.3s ease;
+}
+
+/* Light mode nav bar */
+body.bracket-page.light-mode .nav-bar {
+  background: rgba(255,255,255,0.9);
+  border-bottom: 1px solid #d0d7de;
+}
+
+/* Light mode nav links */
+body.bracket-page.light-mode .nav-bar a {
+  color: #333 !important;
+}
+
+body.bracket-page.light-mode .nav-bar .btn-outline-light {
+  color: #333;
+  border-color: #333;
+}
+
+body.bracket-page.light-mode .nav-bar .btn-outline-light:hover {
+  background: #333;
+  color: #fff;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+body.bracket-page.light-mode .theme-toggle {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.2);
+  color: #333;
+}
+
+body.bracket-page.light-mode .theme-toggle:hover {
+  background: rgba(0,0,0,0.1);
 }
 
 /* Responsive */
