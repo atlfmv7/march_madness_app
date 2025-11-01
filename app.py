@@ -676,37 +676,56 @@ def create_app() -> Flask:
 
     @app.route("/admin/simulate_tournament", methods=["POST"])
     def admin_simulate_tournament():
-        """Simulate tournament games."""
+        """
+        Simulate tournament games with realistic scores and outcomes.
+
+        Supports two modes:
+        1. simulate_all: Simulates all remaining games from current state through championship
+        2. simulate_next: Simulates only the next available round
+
+        Uses realistic college basketball scores (55-90 points), favors lower seeds
+        with 65% win probability, and automatically advances winners through the bracket.
+
+        Returns:
+            Redirect to admin page with success/error message
+        """
         from flask import request, redirect, url_for, flash
         import random
 
+        # Get action type and tournament year from form
         action = request.form.get("action")
         year = request.form.get("year", type=int) or datetime.now(timezone.utc).year
 
         try:
             if action == "simulate_all":
-                # Simulate entire tournament
+                # Simulate entire tournament from current state to championship
+                # Processes all rounds in order: 64 → 32 → 16 → 8 → 4 → 2
                 print(f"\n🏆 Simulating entire {year} tournament...")
 
                 rounds = [64, 32, 16, 8, 4, 2]
                 total_games = 0
 
+                # Process each round sequentially
                 for round_num in rounds:
+                    # Find all scheduled (not yet played) games in this round
                     games = (
                         Game.query
                         .filter_by(year=year, round=str(round_num), status="Scheduled")
                         .all()
                     )
 
+                    # If no scheduled games in this round, tournament is complete
                     if not games:
                         break
 
+                    # Simulate each game in the round
                     for game in games:
+                        # Only simulate if both teams are set (winners from previous round)
                         if game.team1 and game.team2:
                             _simulate_single_game(game)
                             total_games += 1
 
-                # Check for champion
+                # Check if tournament is complete and show champion
                 championship_game = (
                     Game.query
                     .filter_by(year=year, round="2", status="Final")
@@ -714,17 +733,21 @@ def create_app() -> Flask:
                 )
 
                 if championship_game and championship_game.winner_id:
+                    # Tournament complete - display champion info
                     champion = db.session.get(Team, championship_game.winner_id)
                     flash(f"🏆 Tournament Complete! Champion: {champion.name} (Seed {champion.seed}) - Owner: {champion.current_owner.name if champion.current_owner else 'Unknown'}", "success")
                 else:
+                    # Some games simulated but tournament not complete
                     flash(f"✅ Simulated {total_games} games successfully!", "success")
 
             elif action == "simulate_next":
-                # Simulate next available round
+                # Simulate only the next available round (for controlled testing)
+                # Finds the first round with scheduled games and simulates it
                 rounds = [64, 32, 16, 8, 4, 2]
                 simulated = False
 
                 for round_num in rounds:
+                    # Find scheduled games in this round
                     games = (
                         Game.query
                         .filter_by(year=year, round=str(round_num), status="Scheduled")
@@ -732,6 +755,7 @@ def create_app() -> Flask:
                     )
 
                     if games:
+                        # Found a round with scheduled games - simulate them
                         count = 0
                         for game in games:
                             if game.team1 and game.team2:
@@ -740,15 +764,18 @@ def create_app() -> Flask:
 
                         flash(f"✅ Simulated Round of {round_num} ({count} games)", "success")
                         simulated = True
-                        break
+                        break  # Only simulate one round
 
                 if not simulated:
+                    # No scheduled games found in any round
                     flash("⚠️ No scheduled games to simulate", "warning")
 
             else:
+                # Invalid action parameter
                 flash("Invalid action", "error")
 
         except Exception as e:
+            # Rollback database changes on error
             db.session.rollback()
             flash(f"❌ Error simulating tournament: {str(e)}", "error")
             print(f"❌ Error: {e}")
@@ -758,76 +785,121 @@ def create_app() -> Flask:
         return redirect(url_for("admin"))
 
     def _simulate_single_game(game):
-        """Helper to simulate a single game."""
+        """
+        Helper function to simulate a single game with realistic scores and outcomes.
+
+        This function:
+        1. Preserves team ownership at the time the game is played
+        2. Sets realistic spreads based on seed differences
+        3. Generates realistic basketball scores (55-90 points)
+        4. Favors lower seeds with 65% win probability
+        5. Evaluates spread winner and advances the game winner to the next round
+
+        Args:
+            game: Game object to simulate
+        """
         import random
         from bracket_logic import evaluate_and_finalize_game
 
-        # Set game owner fields if not set
+        # Preserve team ownership at game time for historical tracking
+        # This ensures original owners get credit for high/low scores even if team changes hands
         if game.team1_owner_id is None:
             game.team1_owner_id = game.team1.current_owner_id
         if game.team2_owner_id is None:
             game.team2_owner_id = game.team2.current_owner_id
 
-        # Set spread if not already set
+        # Set spread if not already set based on seed differences
+        # Formula: seed_diff * 1.5 (capped at 15 points)
+        # Example: #1 seed vs #16 seed = 15 point spread (max)
         if not game.spread or not game.spread_favorite_team_id:
             if game.team1.seed < game.team2.seed:
+                # Team 1 is favored (lower seed number is better)
                 seed_diff = game.team2.seed - game.team1.seed
                 game.spread = round(min(seed_diff * 1.5, 15.0), 1)
                 game.spread_favorite_team_id = game.team1.id
             elif game.team2.seed < game.team1.seed:
+                # Team 2 is favored
                 seed_diff = game.team1.seed - game.team2.seed
                 game.spread = round(min(seed_diff * 1.5, 15.0), 1)
                 game.spread_favorite_team_id = game.team2.id
             else:
+                # Equal seeds = pick'em game (no favorite)
                 game.spread = 0.0
                 game.spread_favorite_team_id = game.team1.id
 
-        # Generate realistic scores (50-95 range)
+        # Generate realistic college basketball scores
+        # Most games fall in the 55-90 point range
         score1 = random.randint(55, 90)
         score2 = random.randint(55, 90)
 
-        # Ensure no tie
+        # Ensure no ties (college basketball has no ties)
         while score1 == score2:
             score2 = random.randint(55, 90)
 
-        # Favor lower seeds (65% chance to win)
+        # Favor lower seeds to win (65% probability)
+        # This simulates the reality that better seeded teams usually win
         if game.team1.seed < game.team2.seed:
-            if random.random() > 0.35:
+            # Team 1 is favored - 65% chance to win
+            if random.random() > 0.35:  # 65% of the time
+                # If team 2 is winning, swap scores to make team 1 win
                 if score2 > score1:
                     score1, score2 = score2, score1
         elif game.team2.seed < game.team1.seed:
-            if random.random() > 0.35:
+            # Team 2 is favored - 65% chance to win
+            if random.random() > 0.35:  # 65% of the time
+                # If team 1 is winning, swap scores to make team 2 win
                 if score1 > score2:
                     score1, score2 = score2, score1
 
-        # Set scores and finalize
+        # Record final scores and mark game as complete
         game.team1_score = score1
         game.team2_score = score2
         game.status = "Final"
         db.session.commit()
 
-        # Evaluate and advance winner
+        # Evaluate spread winner and advance game winner to next round
+        # This calls bracket_logic.py to determine who won against the spread
+        # and automatically advances the game winner to the next round
         evaluate_and_finalize_game(game.id)
 
     @app.route("/bracket")
     def bracket():
-        """Visual bracket tree display."""
+        """
+        Visual bracket tree display route.
+
+        Displays the full NCAA tournament bracket with:
+        - All games organized by region and round
+        - Team names, seeds, and scores
+        - Spread information and spread winners
+        - Tournament high/low score stats
+        - ESPN-style score ticker for today's games
+        - Light/dark mode theme toggle
+
+        Returns:
+            Rendered bracket.html template with all bracket data
+        """
         from flask import render_template
         from models import Team, Participant
 
-        # Get year from query string or default to most recent
+        # Determine which year's tournament to display
+        # Fetches all available years from database and defaults to most recent
         years = [y for (y,) in db.session.query(Team.year).distinct().order_by(Team.year.desc()).all()]
         if not years:
+            # No data in database, default to current year
             current_year = datetime.now(timezone.utc).year
         else:
+            # Use most recent year in database
             current_year = years[0]
 
+        # Get selected year from URL query parameter (?year=2024)
+        # Falls back to current year if invalid or not provided
         try:
             selected_year = int(request.args.get("year", current_year))
         except ValueError:
             selected_year = current_year
 
-        # Get all games for this year, ordered by round and region
+        # Fetch all games for the selected tournament year
+        # Ordered by region, then round, then game ID for consistent display
         games = (
             Game.query
             .filter_by(year=selected_year)
@@ -835,20 +907,25 @@ def create_app() -> Flask:
             .all()
         )
 
-        # Group by region
+        # Group games by region and round for bracket display
+        # Structure: regions[region][round] = [list of games]
+        # Example: regions["East"]["64"] = [game1, game2, ...]
         from collections import defaultdict
         regions = defaultdict(lambda: defaultdict(list))
         for game in games:
             regions[game.region][game.round].append(game)
 
-        # Get today's games for the score ticker
+        # Get today's games for the ESPN-style score ticker
+        # Only shows games scheduled for today's date
         today = datetime.now(timezone.utc).date()
         todays_games = [
             g for g in games
             if g.game_time and g.game_time.date() == today
         ]
 
-        # Calculate high and low scores from completed games
+        # Calculate tournament high and low scores for stats display
+        # Uses team owner at time of game (team1_owner_id/team2_owner_id)
+        # so original owners get credit even if team changes hands later
         high_score_info = None
         low_score_info = None
 
