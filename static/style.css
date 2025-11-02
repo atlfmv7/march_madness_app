@@ -128,6 +128,10 @@ body.bracket-page.light-mode {
 .bracket-wrapper {
   overflow-x: auto;
   padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  margin: 0 auto;
+  max-width: 100%;
 }
 
 /* Main bracket container - horizontal layout */
@@ -138,6 +142,9 @@ body.bracket-page.light-mode {
   align-items: center;
   padding: 40px 20px;
   gap: 40px;
+  background: linear-gradient(135deg, rgba(30, 30, 48, 0.6) 0%, rgba(42, 42, 64, 0.6) 100%);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 /* Header */
@@ -172,6 +179,16 @@ body.bracket-page.light-mode .bracket-year-selector {
   background: #fff;
   color: #333;
   border-color: #d0d7de;
+}
+
+/* Light mode bracket wrapper and container */
+body.bracket-page.light-mode .bracket-wrapper {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+body.bracket-page.light-mode .bracket-container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 249, 250, 0.9) 100%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* Tournament Stats */
