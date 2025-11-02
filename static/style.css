@@ -313,7 +313,7 @@ body.bracket-page.light-mode .stat-round {
   display: flex;
   gap: 25px;
   position: relative;
-  align-items: center; /* Center columns vertically for proper game positioning */
+  align-items: flex-start; /* Align columns at top so labels are on same horizontal line */
 }
 
 /* Both sides use normal row direction */
