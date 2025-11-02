@@ -1284,6 +1284,10 @@ def create_app() -> Flask:
     return app
 
 
+# Create the application instance at module level for Gunicorn/production
+application = create_app()
+
+
 # ---------- Dev Server ----------
 
 if __name__ == "__main__":

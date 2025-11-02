@@ -9,7 +9,7 @@ User=ryan
 Group=ryan
 WorkingDirectory=/home/ryan/march_madness_app
 Environment="PATH=/home/ryan/march_madness_app/venv/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=/home/ryan/march_madness_app/venv/bin/gunicorn --config gunicorn_config.py app:app
+ExecStart=/home/ryan/march_madness_app/venv/bin/gunicorn --config gunicorn_config.py app:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5

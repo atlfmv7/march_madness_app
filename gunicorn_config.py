@@ -1,6 +1,10 @@
 # Gunicorn configuration file for March Madness Madness
 
 import multiprocessing
+import os
+
+# Get the application directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Server socket
 bind = "127.0.0.1:8000"
@@ -13,9 +17,9 @@ worker_connections = 1000
 timeout = 30
 keepalive = 2
 
-# Logging
-accesslog = "/var/log/march_madness/access.log"
-errorlog = "/var/log/march_madness/error.log"
+# Logging - using local logs directory
+accesslog = os.path.join(BASE_DIR, "logs", "access.log")
+errorlog = os.path.join(BASE_DIR, "logs", "error.log")
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
@@ -24,7 +28,7 @@ proc_name = "march_madness"
 
 # Server mechanics
 daemon = False
-pidfile = "/var/run/march_madness/gunicorn.pid"
+pidfile = os.path.join(BASE_DIR, "logs", "gunicorn.pid")
 umask = 0
 user = None
 group = None
