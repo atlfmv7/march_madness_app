@@ -4,12 +4,12 @@ After=network.target
 
 [Service]
 Type=notify
-# Change this to your actual user if not running as root
-User=user
-Group=user
-WorkingDirectory=/home/user/march_madness_app
-Environment="PATH=/home/user/march_madness_app/venv/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=/home/user/march_madness_app/venv/bin/gunicorn --config gunicorn_config.py app:app
+# UPDATE THESE to match your actual user and installation directory
+User=ryan
+Group=ryan
+WorkingDirectory=/home/ryan/march_madness_app
+Environment="PATH=/home/ryan/march_madness_app/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/ryan/march_madness_app/venv/bin/gunicorn --config gunicorn_config.py app:app
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
