@@ -1037,18 +1037,36 @@ def create_app() -> Flask:
                 logger.warning(f"Failed to compute live leader for game {g.id}: {e}")
                 g._live_owner_leader = None  # type: ignore[attr-defined]
 
-        # Group into nested dict: { region: { round: [games...] } }
-        grouped: Dict[str, Dict[str, list[Game]]] = {}
+        # Categorize games into three groups for better organization
+        today = datetime.now(timezone.utc).date()
+
+        # Today's games grouped by region
+        todays_games_by_region: Dict[str, list[Game]] = {}
         for g in games:
-            region_key = g.region or "Unknown"
-            round_key = g.round
-            grouped.setdefault(region_key, {}).setdefault(
-                round_key, []).append(g)
+            if g.game_time and g.game_time.date() == today:
+                region_key = g.region or "Unknown"
+                todays_games_by_region.setdefault(region_key, []).append(g)
+
+        # Upcoming scheduled games (future dates), sorted by game time
+        upcoming_games = [
+            g for g in games
+            if g.status == "Scheduled" and g.game_time and g.game_time.date() > today
+        ]
+        upcoming_games.sort(key=lambda g: g.game_time if g.game_time else datetime.max.replace(tzinfo=timezone.utc))
+
+        # Past/completed games (Final or In Progress), sorted by date descending
+        past_games = [
+            g for g in games
+            if g.status in ["Final", "In Progress"] or (g.game_time and g.game_time.date() < today)
+        ]
+        past_games.sort(key=lambda g: g.game_time if g.game_time else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
 
         return render_template(
             "index.html",
             message=f"Loaded games for {selected_year}.",
-            grouped=grouped,
+            todays_games_by_region=todays_games_by_region,
+            upcoming_games=upcoming_games,
+            past_games=past_games,
             years=years,
             selected_year=selected_year,
         )
