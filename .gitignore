@@ -71,6 +71,7 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
 
 # Production
 *.pid
