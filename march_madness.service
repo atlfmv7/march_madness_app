@@ -1,0 +1,21 @@
+[Unit]
+Description=March Madness Madness Web Application
+After=network.target
+
+[Service]
+Type=notify
+# Change this to your actual user if not running as root
+User=user
+Group=user
+WorkingDirectory=/home/user/march_madness_app
+Environment="PATH=/home/user/march_madness_app/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/user/march_madness_app/venv/bin/gunicorn --config gunicorn_config.py app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
