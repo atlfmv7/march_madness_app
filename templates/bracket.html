@@ -1008,18 +1008,34 @@
           if (round16 && round8) {
             const r16Games = round16.querySelectorAll('.matchup');
             const r8Games = round8.querySelectorAll('.matchup');
+            const regionName = region.querySelector('.region-name')?.textContent || 'Unknown';
+
+            console.log(`[Elite 8] Processing ${regionName}: ${r8Games.length} Elite 8 games, ${r16Games.length} Sweet 16 games`);
 
             r8Games.forEach((game, index) => {
               const parent1 = r16Games[index * 2];
               const parent2 = r16Games[index * 2 + 1];
 
+              console.log(`  [${regionName}] Elite 8 game ${index}:`);
+              console.log(`    parent1 exists: ${!!parent1}, parent2 exists: ${!!parent2}`);
+
               if (parent1 && parent2) {
-                const parent1Center = parseFloat(parent1.style.top || 0) + (parent1.offsetHeight / 2);
-                const parent2Center = parseFloat(parent2.style.top || 0) + (parent2.offsetHeight / 2);
+                const parent1Top = parseFloat(parent1.style.top || 0);
+                const parent2Top = parseFloat(parent2.style.top || 0);
+                const parent1Center = parent1Top + (parent1.offsetHeight / 2);
+                const parent2Center = parent2Top + (parent2.offsetHeight / 2);
                 const centerPoint = (parent1Center + parent2Center) / 2;
                 const gameTop = centerPoint - (game.offsetHeight / 2);
 
+                console.log(`    parent1.style.top: "${parent1.style.top}", parent1Top: ${parent1Top}`);
+                console.log(`    parent2.style.top: "${parent2.style.top}", parent2Top: ${parent2Top}`);
+                console.log(`    parent1Center: ${parent1Center}, parent2Center: ${parent2Center}`);
+                console.log(`    centerPoint: ${centerPoint}, gameTop: ${gameTop}`);
+
                 game.style.top = gameTop + 'px';
+                console.log(`    Set Elite 8 top to: ${game.style.top}`);
+              } else {
+                console.log(`    SKIPPED - missing parent games`);
               }
             });
           }
