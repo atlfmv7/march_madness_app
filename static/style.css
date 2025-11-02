@@ -313,7 +313,7 @@ body.bracket-page.light-mode .stat-round {
   display: flex;
   gap: 25px;
   position: relative;
-  align-items: flex-start; /* Align all columns at the top so round labels are on same horizontal line */
+  align-items: center; /* Center columns vertically for proper game positioning */
 }
 
 /* Both sides use normal row direction */
@@ -346,6 +346,7 @@ body.bracket-page.light-mode .region-name {
   flex-direction: column;
   min-width: 180px;
   position: relative;
+  padding-top: 26px; /* Add space for absolutely positioned label */
 }
 
 .round-label {
@@ -355,10 +356,12 @@ body.bracket-page.light-mode .region-name {
   color: #888;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 8px;
   min-height: 18px; /* Ensure consistent label height */
   line-height: 18px;
-  position: relative;
+  position: absolute; /* Position labels absolutely */
+  top: 0; /* Align all labels at the top */
+  left: 0;
+  right: 0;
   z-index: 1;
 }
 
