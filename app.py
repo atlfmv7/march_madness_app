@@ -1127,21 +1127,30 @@ def create_app() -> Flask:
                 region_key = g.region or "Unknown"
                 todays_games_by_region.setdefault(region_key, []).append(g)
 
+        # Helper function to get timezone-aware datetime for sorting
+        def get_sortable_datetime(game):
+            """Convert game_time to timezone-aware datetime for safe comparison."""
+            if game.game_time:
+                # If naive (no timezone), assume UTC
+                if game.game_time.tzinfo is None:
+                    return game.game_time.replace(tzinfo=timezone.utc)
+                return game.game_time
+            # Return a far future date for None values
+            return datetime(9999, 12, 31, tzinfo=timezone.utc)
+
         # Upcoming scheduled games (future dates), sorted by game time
         upcoming_games = [
             g for g in games
             if g.status == "Scheduled" and g.game_time and g.game_time.date() > today
         ]
-        # Sort by game_time, putting None values at the end
-        upcoming_games.sort(key=lambda g: g.game_time or datetime(9999, 12, 31, tzinfo=timezone.utc))
+        upcoming_games.sort(key=get_sortable_datetime)
 
         # Past/completed games (Final or In Progress), sorted by date descending
         past_games = [
             g for g in games
             if g.status in ["Final", "In Progress"] or (g.game_time and g.game_time.date() < today)
         ]
-        # Sort by game_time descending, putting None values at the end
-        past_games.sort(key=lambda g: g.game_time or datetime(1900, 1, 1, tzinfo=timezone.utc), reverse=True)
+        past_games.sort(key=get_sortable_datetime, reverse=True)
 
         return render_template(
             "index.html",
