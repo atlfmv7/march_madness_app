@@ -1132,14 +1132,16 @@ def create_app() -> Flask:
             g for g in games
             if g.status == "Scheduled" and g.game_time and g.game_time.date() > today
         ]
-        upcoming_games.sort(key=lambda g: g.game_time if g.game_time else datetime.max.replace(tzinfo=timezone.utc))
+        # Sort by game_time, putting None values at the end
+        upcoming_games.sort(key=lambda g: g.game_time or datetime(9999, 12, 31, tzinfo=timezone.utc))
 
         # Past/completed games (Final or In Progress), sorted by date descending
         past_games = [
             g for g in games
             if g.status in ["Final", "In Progress"] or (g.game_time and g.game_time.date() < today)
         ]
-        past_games.sort(key=lambda g: g.game_time if g.game_time else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+        # Sort by game_time descending, putting None values at the end
+        past_games.sort(key=lambda g: g.game_time or datetime(1900, 1, 1, tzinfo=timezone.utc), reverse=True)
 
         return render_template(
             "index.html",
