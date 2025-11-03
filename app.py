@@ -75,9 +75,38 @@ def create_app() -> Flask:
         app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
     db.init_app(app)
 
+    # ----- IP Access Control -----
+    from functools import wraps
+    from ipaddress import ip_address, ip_network
+
+    def is_local_network(ip_str):
+        """Check if IP is from local network (192.168.150.0/24) or localhost."""
+        try:
+            ip = ip_address(ip_str)
+            # Allow localhost
+            if ip.is_loopback:
+                return True
+            # Allow local network
+            local_net = ip_network('192.168.150.0/24')
+            return ip in local_net
+        except ValueError:
+            return False
+
+    def local_only(f):
+        """Decorator to restrict access to local network only."""
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            from flask import request, abort
+            client_ip = request.remote_addr
+            if not is_local_network(client_ip):
+                abort(403)  # Forbidden
+            return f(*args, **kwargs)
+        return decorated_function
+
     # ----- Routes -----
 
     @app.route("/admin")
+    @local_only
     def admin():
         """Admin dashboard with links to all admin functions."""
         from flask import render_template
@@ -103,6 +132,7 @@ def create_app() -> Flask:
         )
 
     @app.route("/admin/update_game", methods=["POST"])
+    @local_only
     def admin_update_game():
         """Handle manual game updates from admin form."""
         from flask import request, redirect, url_for, flash
@@ -162,6 +192,7 @@ def create_app() -> Flask:
         return redirect(url_for("admin"))
 
     @app.route("/admin/participants")
+    @local_only
     def admin_participants():
         """Manage tournament participants."""
         from flask import render_template
@@ -175,6 +206,7 @@ def create_app() -> Flask:
         )
     
     @app.route("/admin/participants/add", methods=["POST"])
+    @local_only
     def admin_participants_add():
         """Add a new participant."""
         from flask import request, redirect, url_for, flash
@@ -202,6 +234,7 @@ def create_app() -> Flask:
         return redirect(url_for("admin_participants"))
     
     @app.route("/admin/participants/edit/<int:participant_id>", methods=["POST"])
+    @local_only
     def admin_participants_edit(participant_id):
         """Edit an existing participant."""
         from flask import request, redirect, url_for, flash
@@ -237,6 +270,7 @@ def create_app() -> Flask:
         return redirect(url_for("admin_participants"))
     
     @app.route("/admin/participants/delete/<int:participant_id>", methods=["POST"])
+    @local_only
     def admin_participants_delete(participant_id):
         """Delete a participant."""
         from flask import redirect, url_for, flash
@@ -265,6 +299,7 @@ def create_app() -> Flask:
         return redirect(url_for("admin_participants"))
 
     @app.route("/admin/draft")
+    @local_only
     def admin_draft():
         """Team assignment (draft) interface."""
         from flask import render_template, flash, redirect, url_for
@@ -326,6 +361,7 @@ def create_app() -> Flask:
         )
     
     @app.route("/admin/draft/assign", methods=["POST"])
+    @local_only
     def admin_draft_assign():
         """Save team assignments from draft."""
         from flask import request, redirect, url_for, flash
@@ -365,6 +401,7 @@ def create_app() -> Flask:
         return redirect(url_for("admin_draft"))
     
     @app.route("/admin/draft/random", methods=["POST"])
+    @local_only
     def admin_draft_random():
         """Randomly assign teams to participants."""
         from flask import request, redirect, url_for, flash
@@ -433,6 +470,7 @@ def create_app() -> Flask:
         return redirect(url_for("admin_draft"))
     
     @app.route("/admin/draft/reset", methods=["POST"])
+    @local_only
     def admin_draft_reset():
         """Clear all team assignments."""
         from flask import request, redirect, url_for, flash
@@ -456,6 +494,7 @@ def create_app() -> Flask:
         return redirect(url_for("admin_draft"))
 
     @app.route("/admin/reset_test_data", methods=["POST"])
+    @local_only
     def admin_reset_test_data():
         """Reset all data and load test participants and 2024 bracket."""
         from flask import redirect, url_for, flash
@@ -520,7 +559,14 @@ def create_app() -> Flask:
                 ("64", 32), ("32", 16), ("16", 8), ("8", 4), ("4", 2), ("2", 1)
             ]
 
+            # Set game times for Round of 64 spread across today
+            # This allows the score ticker to display them
+            from datetime import timedelta
+            now = datetime.now(timezone.utc)
+            base_time = now.replace(hour=12, minute=0, second=0, microsecond=0)  # Start at noon
+
             games_by_round = {}
+            game_counter = 0
             for round_name, count in BRACKET_STRUCTURE:
                 games_by_round[round_name] = []
                 for i in range(count):
@@ -528,11 +574,20 @@ def create_app() -> Flask:
                     if round_name in ["64", "32", "16", "8"]:
                         region = REGIONS[i % len(REGIONS)]
 
+                    # Set game_time for Round of 64 games (spread throughout the day)
+                    # Other rounds will have game_time set when simulated
+                    game_time = None
+                    if round_name == "64":
+                        # Spread 32 games across 8 hours (4 games per hour = every 15 min)
+                        game_time = base_time + timedelta(minutes=game_counter * 15)
+                        game_counter += 1
+
                     game = Game(
                         round=round_name,
                         region=region,
                         year=year,
-                        status="Scheduled"
+                        status="Scheduled",
+                        game_time=game_time
                     )
                     db.session.add(game)
                     games_by_round[round_name].append(game)
@@ -675,6 +730,7 @@ def create_app() -> Flask:
                         game.team2_owner_id = team2.initial_owner_id
 
     @app.route("/admin/simulate_tournament", methods=["POST"])
+    @local_only
     def admin_simulate_tournament():
         """
         Simulate tournament games with realistic scores and outcomes.
@@ -851,6 +907,10 @@ def create_app() -> Flask:
                 if score1 > score2:
                     score1, score2 = score2, score1
 
+        # Set game time to now if not already set (for score ticker display)
+        if not game.game_time:
+            game.game_time = datetime.now(timezone.utc)
+
         # Record final scores and mark game as complete
         game.team1_score = score1
         game.team2_score = score2
@@ -862,10 +922,10 @@ def create_app() -> Flask:
         # and automatically advances the game winner to the next round
         evaluate_and_finalize_game(game.id)
 
-    @app.route("/bracket")
-    def bracket():
+    @app.route("/")
+    def home():
         """
-        Visual bracket tree display route.
+        Visual bracket tree display route (home page).
 
         Displays the full NCAA tournament bracket with:
         - All games organized by region and round
@@ -932,21 +992,22 @@ def create_app() -> Flask:
         completed_games = [g for g in games if g.status == "Final"]
 
         if completed_games:
-            # Find all individual scores with team and owner info
+            # Find all individual scores with team and original owner info
+            # Uses initial_owner_id so the original owner gets credit for high/low scores
             all_scores = []
             for game in completed_games:
                 if game.team1_score is not None:
                     all_scores.append({
                         'score': game.team1_score,
                         'team': game.team1,
-                        'owner_id': game.team1_owner_id,
+                        'owner_id': game.team1.initial_owner_id,
                         'game': game
                     })
                 if game.team2_score is not None:
                     all_scores.append({
                         'score': game.team2_score,
                         'team': game.team2,
-                        'owner_id': game.team2_owner_id,
+                        'owner_id': game.team2.initial_owner_id,
                         'game': game
                     })
 
@@ -987,10 +1048,10 @@ def create_app() -> Flask:
             todays_games=todays_games
         )
 
-    @app.route("/")
-    def home():
+    @app.route("/table")
+    def table_view():
         """
-        Homepage:
+        Table view of all games:
         - Loads games for a selected year (default: latest available).
         - Computes the live 'leader vs spread' for in-progress games.
         - Groups the games by region and round for simple rendering.
@@ -998,7 +1059,7 @@ def create_app() -> Flask:
         How 'year' works:
         - We look up all distinct Game.year values in ascending order to build a year list.
         - If no games exist yet, we fall back to the current UTC year.
-        - If a 'year' query parameter is provided (e.g., /?year=2025), we attempt to use it;
+        - If a 'year' query parameter is provided (e.g., /table?year=2025), we attempt to use it;
           otherwise we default to the most recent year available in the DB.
         - We then filter the games query to only include the selected year.
         """
@@ -1103,8 +1164,40 @@ def create_app() -> Flask:
             # Convert to ET
             et_time = dt.astimezone(ZoneInfo("America/New_York"))
             return et_time.strftime("%a, %b %d at %I:%M %p ET")
-        
-        return dict(url_with_year=url_with_year, format_game_time=format_game_time)
+
+        def short_game_time(dt):
+            """Format a datetime in compact format for bracket display (e.g., '11/1 - 8am')."""
+            if not dt:
+                return None
+            from datetime import timezone
+            from zoneinfo import ZoneInfo
+            # Ensure timezone aware
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            # Convert to ET
+            et_time = dt.astimezone(ZoneInfo("America/New_York"))
+            # Format as "M/D - Ham" or "M/D - Hpm"
+            hour = et_time.hour
+            if hour == 0:
+                time_str = "12am"
+            elif hour < 12:
+                time_str = f"{hour}am"
+            elif hour == 12:
+                time_str = "12pm"
+            else:
+                time_str = f"{hour - 12}pm"
+            return f"{et_time.month}/{et_time.day} - {time_str}"
+
+        # Check if current request is from local network
+        client_ip = request.remote_addr
+        is_local = is_local_network(client_ip)
+
+        return dict(
+            url_with_year=url_with_year,
+            format_game_time=format_game_time,
+            short_game_time=short_game_time,
+            is_local=is_local
+        )
 
     @app.cli.command("eval-game")
     def eval_game_cmd():
@@ -1207,6 +1300,10 @@ def create_app() -> Flask:
         click.echo(f"✅ Scores updated for {iso}: {count} game(s).")
 
     return app
+
+
+# Create the application instance at module level for Gunicorn/production
+application = create_app()
 
 
 # ---------- Dev Server ----------

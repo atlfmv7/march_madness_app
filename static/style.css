@@ -128,6 +128,10 @@ body.bracket-page.light-mode {
 .bracket-wrapper {
   overflow-x: auto;
   padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  margin: 0 auto;
+  max-width: 100%;
 }
 
 /* Main bracket container - horizontal layout */
@@ -138,6 +142,9 @@ body.bracket-page.light-mode {
   align-items: center;
   padding: 40px 20px;
   gap: 40px;
+  background: linear-gradient(135deg, rgba(30, 30, 48, 0.6) 0%, rgba(42, 42, 64, 0.6) 100%);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 /* Header */
@@ -172,6 +179,16 @@ body.bracket-page.light-mode .bracket-year-selector {
   background: #fff;
   color: #333;
   border-color: #d0d7de;
+}
+
+/* Light mode bracket wrapper and container */
+body.bracket-page.light-mode .bracket-wrapper {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+body.bracket-page.light-mode .bracket-container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 249, 250, 0.9) 100%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* Tournament Stats */
@@ -296,7 +313,7 @@ body.bracket-page.light-mode .stat-round {
   display: flex;
   gap: 25px;
   position: relative;
-  align-items: center;
+  align-items: flex-start; /* Align columns at top so labels are on same horizontal line */
 }
 
 /* Both sides use normal row direction */
@@ -329,6 +346,7 @@ body.bracket-page.light-mode .region-name {
   flex-direction: column;
   min-width: 180px;
   position: relative;
+  padding-top: 26px; /* Add space for absolutely positioned label */
 }
 
 .round-label {
@@ -338,8 +356,12 @@ body.bracket-page.light-mode .region-name {
   color: #888;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 8px;
-  position: relative;
+  min-height: 18px; /* Ensure consistent label height */
+  line-height: 18px;
+  position: absolute; /* Position labels absolutely */
+  top: 0; /* Align all labels at the top */
+  left: 0;
+  right: 0;
   z-index: 1;
 }
 
@@ -394,6 +416,22 @@ body.bracket-page.light-mode .matchup {
   border-radius: 3px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   z-index: 1;
+}
+
+.game-time {
+  font-size: 0.6rem;
+  color: #888;
+  text-align: center;
+  padding: 4px 0;
+  background: rgba(0,0,0,0.1);
+  border-top: 1px solid #2a2a40;
+}
+
+/* Light mode game-time */
+body.bracket-page.light-mode .game-time {
+  color: #666;
+  background: rgba(0,0,0,0.03);
+  border-top: 1px solid #d0d7de;
 }
 
 .team {
@@ -648,7 +686,7 @@ body.bracket-page.light-mode .nav-bar .btn-outline-light:hover {
   background: rgba(255,255,255,0.05);
   padding: 8px 16px;
   border-radius: 6px;
-  min-width: 280px;
+  min-width: 380px;
   flex-shrink: 0;
 }
 
@@ -693,15 +731,43 @@ body.bracket-page.light-mode .nav-bar .btn-outline-light:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Highlight spread winner for completed games (green) */
+.ticker-team.spread-winner {
+  background: rgba(40, 167, 69, 0.3);
+  border: 1px solid rgba(40, 167, 69, 0.6);
+}
+
+/* Highlight current leader for in-progress games (yellow/orange) */
+.ticker-team.live-leader {
+  background: rgba(255, 193, 7, 0.3);
+  border: 1px solid rgba(255, 193, 7, 0.6);
 }
 
 .ticker-team-name {
   font-size: 0.85rem;
   color: #ccc;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 80px;
+}
+
+.ticker-owner {
+  font-size: 0.7rem;
+  color: #999;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 60px;
 }
 
 .ticker-score {
@@ -712,8 +778,14 @@ body.bracket-page.light-mode .nav-bar .btn-outline-light:hover {
   text-align: right;
 }
 
-.ticker-score.winner {
+.ticker-spread {
+  font-size: 0.7rem;
   color: #4a90e2;
+  font-weight: bold;
+  padding: 3px 8px;
+  background: rgba(74, 144, 226, 0.2);
+  border-radius: 3px;
+  white-space: nowrap;
 }
 
 .ticker-round {
@@ -746,16 +818,31 @@ body.bracket-page.light-mode .ticker-status.final {
   background: #198754;
 }
 
+body.bracket-page.light-mode .ticker-team.spread-winner {
+  background: rgba(25, 135, 84, 0.2);
+  border: 1px solid rgba(25, 135, 84, 0.5);
+}
+
+body.bracket-page.light-mode .ticker-team.live-leader {
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+}
+
 body.bracket-page.light-mode .ticker-team-name {
   color: #495057;
+}
+
+body.bracket-page.light-mode .ticker-owner {
+  color: #6c757d;
 }
 
 body.bracket-page.light-mode .ticker-score {
   color: #212529;
 }
 
-body.bracket-page.light-mode .ticker-score.winner {
+body.bracket-page.light-mode .ticker-spread {
   color: #0d6efd;
+  background: rgba(13, 110, 253, 0.1);
 }
 
 body.bracket-page.light-mode .ticker-round {
@@ -875,4 +962,320 @@ body.bracket-page.light-mode .theme-toggle:hover {
 
 .games-table th:nth-child(5) {
   width: 20%;
+}
+
+/* ==================== MOBILE RESPONSIVE STYLES ==================== */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+  /* Make bracket scrollable horizontally */
+  .bracket-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bracket-container {
+    min-width: 1400px; /* Reduced from 2000px */
+  }
+
+  /* Reduce round column width */
+  .round-column {
+    min-width: 140px;
+  }
+
+  /* Smaller matchups */
+  .matchup {
+    font-size: 0.85rem;
+  }
+
+  /* Stats cards stack vertically on tablets */
+  .tournament-stats {
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  .stat-card {
+    min-width: 100%;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 768px) {
+  /* Header and navigation */
+  .bracket-header {
+    padding: 15px 10px;
+  }
+
+  .bracket-title {
+    font-size: 1.25rem;
+  }
+
+  .nav-bar {
+    padding: 10px 0;
+  }
+
+  .nav-bar .btn {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+
+  .theme-toggle {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+
+  /* Tournament stats - more compact */
+  .tournament-stats {
+    margin: 0 10px 20px;
+    gap: 15px;
+  }
+
+  .stat-card {
+    padding: 15px;
+    flex-direction: row;
+    min-width: 100%;
+  }
+
+  .stat-icon {
+    font-size: 2rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .stat-info {
+    font-size: 0.75rem;
+  }
+
+  /* Score ticker - more compact */
+  .score-ticker {
+    padding: 8px 0;
+  }
+
+  .ticker-game {
+    min-width: 320px;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .ticker-status {
+    font-size: 0.6rem;
+    min-width: 60px;
+    padding: 2px 6px;
+  }
+
+  .ticker-team {
+    gap: 6px;
+    padding: 3px 6px;
+  }
+
+  .ticker-team-name {
+    font-size: 0.75rem;
+    min-width: 60px;
+  }
+
+  .ticker-owner {
+    font-size: 0.6rem;
+    min-width: 50px;
+  }
+
+  .ticker-score {
+    font-size: 0.8rem;
+  }
+
+  .ticker-spread {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+  }
+
+  .ticker-round {
+    font-size: 0.65rem;
+  }
+
+  /* Bracket container - allow horizontal scroll */
+  .bracket-wrapper {
+    padding: 0;
+  }
+
+  .bracket-container {
+    min-width: 1200px; /* Reduced for mobile */
+    padding: 10px;
+  }
+
+  /* Round columns - more compact */
+  .round-column {
+    min-width: 120px;
+    gap: 8px;
+  }
+
+  .round-label {
+    font-size: 0.7rem;
+    padding: 4px;
+  }
+
+  /* Matchups - smaller and more compact */
+  .matchup {
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    min-height: 50px;
+  }
+
+  .team {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  /* Team elements */
+  .seed {
+    font-size: 0.65rem;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+  }
+
+  .team-name {
+    font-size: 0.7rem;
+  }
+
+  .team-owner {
+    font-size: 0.55rem;
+  }
+
+  .score {
+    font-size: 0.75rem;
+    min-width: 24px;
+  }
+
+  /* Spread badge */
+  .matchup-spread {
+    font-size: 0.55rem;
+    padding: 1px 4px;
+    top: -8px;
+    right: 6px;
+  }
+
+  /* Game time */
+  .game-time {
+    font-size: 0.55rem;
+    padding: 3px 0;
+  }
+
+  /* Region labels */
+  .region-name {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  /* Finals section */
+  .finals-section {
+    padding: 15px 10px;
+  }
+
+  .finals-title {
+    font-size: 1rem;
+  }
+
+  /* Bracket halves spacing */
+  .bracket-half {
+    gap: 40px;
+  }
+
+  .region-bracket {
+    gap: 15px;
+  }
+
+  /* Year selector */
+  .bracket-year-selector {
+    font-size: 0.8rem;
+  }
+
+  /* Empty slots */
+  .empty-slot {
+    padding: 8px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .bracket-title {
+    font-size: 1rem;
+  }
+
+  .nav-bar .btn {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+
+  .tournament-stats {
+    margin: 0 5px 15px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-icon {
+    font-size: 1.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .bracket-container {
+    min-width: 1000px; /* Even more compact for very small screens */
+    padding: 5px;
+  }
+
+  .round-column {
+    min-width: 100px;
+  }
+
+  .matchup {
+    font-size: 0.7rem;
+    min-height: 45px;
+  }
+
+  .team {
+    padding: 5px 6px;
+  }
+
+  .team-name {
+    font-size: 0.65rem;
+  }
+
+  .team-owner {
+    font-size: 0.5rem;
+  }
+
+  .ticker-game {
+    min-width: 280px;
+  }
+}
+
+/* Landscape orientation hint for mobile */
+@media (max-width: 768px) and (orientation: portrait) {
+  .bracket-wrapper::before {
+    content: "💡 Tip: Rotate your device for the best bracket viewing experience";
+    display: block;
+    background: rgba(74, 144, 226, 0.15);
+    color: #4a90e2;
+    padding: 8px;
+    text-align: center;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    margin: 10px;
+  }
+}
+
+/* Light mode landscape hint */
+body.bracket-page.light-mode .bracket-wrapper::before {
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
 }
