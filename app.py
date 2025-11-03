@@ -81,24 +81,41 @@ def create_app() -> Flask:
     def admin():
         """Admin dashboard with links to all admin functions."""
         from flask import render_template
-        # Get all scheduled or in-progress games for current year
-        current_year = datetime.now(timezone.utc).year
+
+        # Build a sorted list of available years from the DB
+        years = [y for (y,) in db.session.query(
+            Game.year).distinct().order_by(Game.year.asc()).all()]
+
+        # Choose a default year: latest found in DB, or current UTC year if no data yet
+        if years:
+            default_year = years[-1]  # latest
+        else:
+            default_year = datetime.now(timezone.utc).year
+
+        # Parse the incoming ?year=YYYY, falling back to default_year
+        try:
+            selected_year = int(request.args.get("year", default_year))
+        except ValueError:
+            selected_year = default_year
+
+        # Get all scheduled or in-progress games for selected year
         games = (
             Game.query
-            .filter(Game.year == current_year)
+            .filter(Game.year == selected_year)
             .filter(Game.status.in_(["Scheduled", "In Progress"]))
             .order_by(Game.region.asc(), Game.round.asc(), Game.id.asc())
             .all()
         )
-        
+
         # Get participant count for dashboard
         from models import Participant
         participant_count = db.session.query(Participant).count()
-        
+
         return render_template(
-            "admin.html", 
-            games=games, 
-            year=current_year,
+            "admin.html",
+            games=games,
+            year=selected_year,
+            years=years,
             participant_count=participant_count
         )
 
