@@ -12,18 +12,39 @@
     crossorigin="anonymous"
   />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <script>
+    // Auto-redirect mobile/small screens to table view for better UX
+    (function() {
+      // Check if user manually navigated here (via clicking "Visual Bracket" button)
+      const fromTableView = sessionStorage.getItem('viewPreference') === 'bracket';
+
+      // Only redirect if:
+      // 1. Screen is small (< 1024px width)
+      // 2. User didn't manually choose bracket view
+      if (!fromTableView && window.innerWidth < 1024) {
+        // Set flag to prevent redirect when user clicks "Table View" button
+        sessionStorage.setItem('viewPreference', 'table');
+        window.location.href = "{{ url_for('table_view') }}";
+      } else {
+        // Clear preference to allow auto-redirect on next visit
+        sessionStorage.removeItem('viewPreference');
+      }
+    })();
+  </script>
 </head>
 <body class="bracket-page">
   <div class="nav-bar">
     <div class="container-fluid">
       <div class="d-flex justify-content-between align-items-center">
-        <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">← March Madness Madness</a>
+        <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">March Madness Madness</a>
         <div class="d-flex gap-2">
           <button id="themeToggle" class="theme-toggle" title="Toggle light/dark mode">
             <span id="themeIcon">☀️</span>
           </button>
-          <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light">Table View</a>
+          <a href="{{ url_for('table_view') }}" class="btn btn-sm btn-outline-light">Table View</a>
+          {% if is_local %}
           <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -39,20 +60,24 @@
           {{ game.status }}
         </span>
         <div class="ticker-matchup">
-          <div class="ticker-team">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team1_score > game.team2_score %}live-leader{% endif %}">
             <span class="ticker-team-name">{{ game.team1.name }}</span>
-            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team1_id %}winner{% endif %}">
+            <span class="ticker-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+            <span class="ticker-score">
               {% if game.team1_score is not none %}{{ game.team1_score }}{% else %}—{% endif %}
             </span>
           </div>
-          <div class="ticker-team">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team2_score > game.team1_score %}live-leader{% endif %}">
             <span class="ticker-team-name">{{ game.team2.name }}</span>
-            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team2_id %}winner{% endif %}">
+            <span class="ticker-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+            <span class="ticker-score">
               {% if game.team2_score is not none %}{{ game.team2_score }}{% else %}—{% endif %}
             </span>
           </div>
         </div>
-        <span class="ticker-round">R{{ game.round }}</span>
+        {% if game.spread %}
+        <span class="ticker-spread">{{ game.spread_label() }}</span>
+        {% endif %}
       </div>
       {% endfor %}
       <!-- Duplicate content for seamless loop -->
@@ -62,20 +87,24 @@
           {{ game.status }}
         </span>
         <div class="ticker-matchup">
-          <div class="ticker-team">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team1_score > game.team2_score %}live-leader{% endif %}">
             <span class="ticker-team-name">{{ game.team1.name }}</span>
-            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team1_id %}winner{% endif %}">
+            <span class="ticker-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+            <span class="ticker-score">
               {% if game.team1_score is not none %}{{ game.team1_score }}{% else %}—{% endif %}
             </span>
           </div>
-          <div class="ticker-team">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team2_score > game.team1_score %}live-leader{% endif %}">
             <span class="ticker-team-name">{{ game.team2.name }}</span>
-            <span class="ticker-score {% if game.status == 'Final' and game.winner_id == game.team2_id %}winner{% endif %}">
+            <span class="ticker-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+            <span class="ticker-score">
               {% if game.team2_score is not none %}{{ game.team2_score }}{% else %}—{% endif %}
             </span>
           </div>
         </div>
-        <span class="ticker-round">R{{ game.round }}</span>
+        {% if game.spread %}
+        <span class="ticker-spread">{{ game.spread_label() }}</span>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
@@ -177,6 +206,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -215,6 +247,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -255,6 +290,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -293,6 +331,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -340,6 +381,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -378,6 +422,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -418,6 +465,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -456,6 +506,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -502,6 +555,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -564,6 +620,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if championship.game_time %}
+              <div class="game-time">{{ short_game_time(championship.game_time) }}</div>
+              {% endif %}
             </div>
           </div>
               {% endif %}
@@ -613,6 +672,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -651,6 +713,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -691,6 +756,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -729,6 +797,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -776,6 +847,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -814,6 +888,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -854,6 +931,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -892,6 +972,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
