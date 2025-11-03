@@ -1,12 +1,4 @@
 <!-- templates/index.html -->
-<!--
-  Purpose:
-  - Render the home page with games grouped by region and round.
-  - Provide a compact year selector to filter the view by tournament year.
-  Notes:
-  - Uses Bootstrap via CDN for quick, mobile-friendly styling.
-  - The year dropdown submits a GET form to reload the page with ?year=YYYY.
--->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -38,29 +30,117 @@
           <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
           {% endif %}
         </div>
+        {% for g in games %}
+        <div class="game-card">
+          <div class="game-header">
+            <div class="game-round">Round of {{ g.round }}</div>
+            {% if g.game_time %}
+            <div class="game-time">{{ format_game_time(g.game_time) }}</div>
+            {% endif %}
+          </div>
+          <div class="matchup-container">
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team1.name if g.team1 else "TBD" }}
+                {% if g.team1 %}
+                <span class="team-seed">({{ g.team1.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team1 %}
+              <div class="team-owner">{{ g.team1_owner.name if g.team1_owner else "—" }}</div>
+              {% endif %}
+              {% if g.team1_score is not none %}
+              <div class="team-score {% if g.status == 'Final' and g.winner_id == g.team1_id %}winner{% endif %}">
+                {{ g.team1_score }}
+              </div>
+              {% endif %}
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team2.name if g.team2 else "TBD" }}
+                {% if g.team2 %}
+                <span class="team-seed">({{ g.team2.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team2 %}
+              <div class="team-owner">{{ g.team2_owner.name if g.team2_owner else "—" }}</div>
+              {% endif %}
+              {% if g.team2_score is not none %}
+              <div class="team-score {% if g.status == 'Final' and g.winner_id == g.team2_id %}winner{% endif %}">
+                {{ g.team2_score }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="game-footer">
+            <div>
+              <span class="status-badge {% if g.status == 'In Progress' %}status-live{% elif g.status == 'Final' %}status-final{% else %}status-scheduled{% endif %}">
+                {{ g.status }}
+              </span>
+              {% if g.spread %}
+              <span class="spread-badge">{{ g.spread_label() }}</span>
+              {% endif %}
+            </div>
+            {% if g._live_owner_leader %}
+            <span class="leader-badge">Leader: {{ g._live_owner_leader.name }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
       </div>
-    </nav>
-
-    <main class="container py-4">
-      <!-- Header + Year Selector (compact, submits via GET) -->
-      <div class="d-flex align-items-center justify-content-between mb-3">
-  <div>
-    <h1 class="h4 mb-0">
-      March Madness Madness
-      <span class="badge text-bg-secondary ms-2">{{ selected_year }}</span>
-    </h1>
-    {% if message %}
-      <div class="text-muted small">{{ message }}</div>
+      {% endfor %}
+    </div>
     {% endif %}
-  </div>
 
-  {# Show the year selector only if we actually have multiple years #}
-  {% if years and years|length > 1 %}
-    <form method="get" class="d-flex align-items-center gap-2">
-      <label for="year" class="form-label mb-0 me-2">Year:</label>
-      <select id="year" name="year" class="form-select form-select-sm" onchange="this.form.submit()">
-        {% for y in years %}
-          <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+    <!-- Upcoming Games Section -->
+    {% if upcoming_games %}
+    <div class="section-card">
+      <div class="section-header upcoming">
+        <span>📅</span>
+        <span>Upcoming Games</span>
+      </div>
+      <div class="region-subsection">
+        {% for g in upcoming_games %}
+        <div class="game-card">
+          <div class="game-header">
+            <div class="game-round">{{ g.region }} - Round of {{ g.round }}</div>
+            {% if g.game_time %}
+            <div class="game-time">{{ format_game_time(g.game_time) }}</div>
+            {% endif %}
+          </div>
+          <div class="matchup-container">
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team1.name if g.team1 else "TBD" }}
+                {% if g.team1 %}
+                <span class="team-seed">({{ g.team1.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team1 %}
+              <div class="team-owner">{{ g.team1_owner.name if g.team1_owner else "—" }}</div>
+              {% endif %}
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team2.name if g.team2 else "TBD" }}
+                {% if g.team2 %}
+                <span class="team-seed">({{ g.team2.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team2 %}
+              <div class="team-owner">{{ g.team2_owner.name if g.team2_owner else "—" }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="game-footer">
+            <span class="status-badge status-scheduled">{{ g.status }}</span>
+            {% if g.spread %}
+            <span class="spread-badge">{{ g.spread_label() }}</span>
+            {% endif %}
+          </div>
+        </div>
         {% endfor %}
       </select>
       <noscript>
@@ -153,16 +233,23 @@
               </tbody>
             </table>
           </div>
-          {% endfor %}
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-      {% else %}
-      <div class="alert alert-warning">
-        No games found. Did you run <code>python seed_data.py</code>?
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not todays_games_by_region and not upcoming_games and not past_games %}
+    <div class="section-card">
+      <div class="empty-state">
+        <div class="empty-state-icon">🏀</div>
+        <h3>No Games Found</h3>
+        <p>No games are available for {{ selected_year }}. Try running <code>python seed_data.py</code> to populate the database.</p>
       </div>
-      {% endif %}
-    </main>
+    </div>
+    {% endif %}
+  </div>
 
     <!-- Optional JS (we'll use this later for auto-refresh, etc.) -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>

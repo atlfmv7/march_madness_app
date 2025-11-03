@@ -110,24 +110,41 @@ def create_app() -> Flask:
     def admin():
         """Admin dashboard with links to all admin functions."""
         from flask import render_template
-        # Get all scheduled or in-progress games for current year
-        current_year = datetime.now(timezone.utc).year
+
+        # Build a sorted list of available years from the DB
+        years = [y for (y,) in db.session.query(
+            Game.year).distinct().order_by(Game.year.asc()).all()]
+
+        # Choose a default year: latest found in DB, or current UTC year if no data yet
+        if years:
+            default_year = years[-1]  # latest
+        else:
+            default_year = datetime.now(timezone.utc).year
+
+        # Parse the incoming ?year=YYYY, falling back to default_year
+        try:
+            selected_year = int(request.args.get("year", default_year))
+        except ValueError:
+            selected_year = default_year
+
+        # Get all scheduled or in-progress games for selected year
         games = (
             Game.query
-            .filter(Game.year == current_year)
+            .filter(Game.year == selected_year)
             .filter(Game.status.in_(["Scheduled", "In Progress"]))
             .order_by(Game.region.asc(), Game.round.asc(), Game.id.asc())
             .all()
         )
-        
+
         # Get participant count for dashboard
         from models import Participant
         participant_count = db.session.query(Participant).count()
-        
+
         return render_template(
-            "admin.html", 
-            games=games, 
-            year=current_year,
+            "admin.html",
+            games=games,
+            year=selected_year,
+            years=years,
             participant_count=participant_count
         )
 
@@ -1098,18 +1115,36 @@ def create_app() -> Flask:
                 logger.warning(f"Failed to compute live leader for game {g.id}: {e}")
                 g._live_owner_leader = None  # type: ignore[attr-defined]
 
-        # Group into nested dict: { region: { round: [games...] } }
-        grouped: Dict[str, Dict[str, list[Game]]] = {}
+        # Categorize games into three groups for better organization
+        today = datetime.now(timezone.utc).date()
+
+        # Today's games grouped by region
+        todays_games_by_region: Dict[str, list[Game]] = {}
         for g in games:
-            region_key = g.region or "Unknown"
-            round_key = g.round
-            grouped.setdefault(region_key, {}).setdefault(
-                round_key, []).append(g)
+            if g.game_time and g.game_time.date() == today:
+                region_key = g.region or "Unknown"
+                todays_games_by_region.setdefault(region_key, []).append(g)
+
+        # Upcoming scheduled games (future dates), sorted by game time
+        upcoming_games = [
+            g for g in games
+            if g.status == "Scheduled" and g.game_time and g.game_time.date() > today
+        ]
+        upcoming_games.sort(key=lambda g: g.game_time if g.game_time else datetime.max.replace(tzinfo=timezone.utc))
+
+        # Past/completed games (Final or In Progress), sorted by date descending
+        past_games = [
+            g for g in games
+            if g.status in ["Final", "In Progress"] or (g.game_time and g.game_time.date() < today)
+        ]
+        past_games.sort(key=lambda g: g.game_time if g.game_time else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
 
         return render_template(
             "index.html",
             message=f"Loaded games for {selected_year}.",
-            grouped=grouped,
+            todays_games_by_region=todays_games_by_region,
+            upcoming_games=upcoming_games,
+            past_games=past_games,
             years=years,
             selected_year=selected_year,
         )
