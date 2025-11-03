@@ -109,7 +109,7 @@ def create_app() -> Flask:
     @local_only
     def admin():
         """Admin dashboard with links to all admin functions."""
-        from flask import render_template
+        from flask import render_template, request
 
         # Build a sorted list of available years from the DB
         years = [y for (y,) in db.session.query(
@@ -1080,6 +1080,8 @@ def create_app() -> Flask:
           otherwise we default to the most recent year available in the DB.
         - We then filter the games query to only include the selected year.
         """
+        from flask import request, render_template
+
         # Build a sorted list of available years from the DB, e.g. [2024, 2025].
         years = [y for (y,) in db.session.query(
             Game.year).distinct().order_by(Game.year.asc()).all()]
