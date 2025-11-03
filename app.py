@@ -1072,6 +1072,8 @@ def create_app() -> Flask:
         - Loads games for a selected year (default: latest available).
         - Computes the live 'leader vs spread' for in-progress games.
         - Groups the games by region and round for simple rendering.
+        - Calculates participant standings.
+        - Supports filtering by region, round, and participant.
 
         How 'year' works:
         - We look up all distinct Game.year values in ascending order to build a year list.
@@ -1081,6 +1083,7 @@ def create_app() -> Flask:
         - We then filter the games query to only include the selected year.
         """
         from flask import request, render_template
+        from models import Participant
 
         # Build a sorted list of available years from the DB, e.g. [2024, 2025].
         years = [y for (y,) in db.session.query(
@@ -1098,13 +1101,109 @@ def create_app() -> Flask:
         except ValueError:
             selected_year = default_year
 
+        # Get filter parameters
+        filter_region = request.args.get("region", "")
+        filter_round = request.args.get("round", "")
+        filter_participant = request.args.get("participant", "")
+
         # ORDER: region asc, round asc (string), id asc for stability; filter by year.
-        games = (
-            Game.query
-            .filter(Game.year == selected_year)
-            .order_by(Game.region.asc(), Game.round.asc(), Game.id.asc())
-            .all()
-        )
+        games_query = Game.query.filter(Game.year == selected_year)
+
+        # Apply filters
+        if filter_region:
+            games_query = games_query.filter(Game.region == filter_region)
+        if filter_round:
+            games_query = games_query.filter(Game.round == filter_round)
+        if filter_participant:
+            # Filter games where either team is owned by the participant
+            games_query = games_query.join(Team, Game.team1_id == Team.id).filter(
+                (Team.initial_owner_id == int(filter_participant)) |
+                (Game.team2.has(Team.initial_owner_id == int(filter_participant)))
+            )
+
+        games = games_query.order_by(Game.region.asc(), Game.round.asc(), Game.id.asc()).all()
+
+        # Calculate participant standings
+        participants = Participant.query.all()
+        participant_standings = []
+
+        for participant in participants:
+            # Get all teams initially owned by this participant
+            teams = Team.query.filter_by(
+                year=selected_year,
+                initial_owner_id=participant.id
+            ).all()
+
+            if not teams:
+                continue
+
+            total_teams = len(teams)
+            teams_alive = 0
+            total_wins = 0
+            total_losses = 0
+            total_points = 0
+            spread_wins = 0
+            spread_losses = 0
+
+            for team in teams:
+                # Check if team is still alive (has future games scheduled or in progress)
+                has_future_games = Game.query.filter(
+                    ((Game.team1_id == team.id) | (Game.team2_id == team.id)),
+                    Game.year == selected_year,
+                    Game.status.in_(["Scheduled", "In Progress"])
+                ).first() is not None
+
+                if has_future_games:
+                    teams_alive += 1
+
+                # Count wins/losses
+                team_games = Game.query.filter(
+                    ((Game.team1_id == team.id) | (Game.team2_id == team.id)),
+                    Game.year == selected_year,
+                    Game.status == "Final"
+                ).all()
+
+                for game in team_games:
+                    if game.winner_id == team.id:
+                        total_wins += 1
+                    elif game.winner_id:  # Lost (winner exists but it's not this team)
+                        total_losses += 1
+
+                    # Count spread wins/losses
+                    spread_winner = game.spread_winner_team_id()
+                    if spread_winner == team.id:
+                        spread_wins += 1
+                    elif spread_winner and spread_winner != team.id:
+                        spread_losses += 1
+
+                    # Sum up points scored
+                    if game.team1_id == team.id and game.team1_score is not None:
+                        total_points += game.team1_score
+                    elif game.team2_id == team.id and game.team2_score is not None:
+                        total_points += game.team2_score
+
+            participant_standings.append({
+                'participant': participant,
+                'total_teams': total_teams,
+                'teams_alive': teams_alive,
+                'wins': total_wins,
+                'losses': total_losses,
+                'spread_wins': spread_wins,
+                'spread_losses': spread_losses,
+                'total_points': total_points,
+                'win_pct': round(total_wins / (total_wins + total_losses) * 100, 1) if (total_wins + total_losses) > 0 else 0,
+                'spread_win_pct': round(spread_wins / (spread_wins + spread_losses) * 100, 1) if (spread_wins + spread_losses) > 0 else 0
+            })
+
+        # Sort by spread wins (most important), then wins, then total points
+        participant_standings.sort(key=lambda x: (x['spread_wins'], x['wins'], x['total_points']), reverse=True)
+
+        # Get available regions and rounds for filter dropdowns
+        all_regions = db.session.query(Game.region).filter(Game.year == selected_year).distinct().all()
+        available_regions = sorted([r[0] for r in all_regions if r[0]])
+
+        all_rounds = db.session.query(Game.round).filter(Game.year == selected_year).distinct().all()
+        available_rounds = sorted([r[0] for r in all_rounds if r[0]], key=lambda x: int(x))
 
         # Compute live leader safely; never let logic errors break the page.
         import logging
@@ -1160,6 +1259,13 @@ def create_app() -> Flask:
             past_games=past_games,
             years=years,
             selected_year=selected_year,
+            participant_standings=participant_standings,
+            available_regions=available_regions,
+            available_rounds=available_rounds,
+            participants=participants,
+            filter_region=filter_region,
+            filter_round=filter_round,
+            filter_participant=filter_participant,
         )
 
     # Create tables once at startup (safe no-op if already exist)
