@@ -264,6 +264,161 @@
       margin-left: 10px;
     }
 
+    /* Participant Standings Table */
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .standings-table th {
+      background: #f8f9fa;
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+      white-space: nowrap;
+    }
+
+    .standings-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .standings-table tr:hover {
+      background: #f8f9fa;
+    }
+
+    .leader-row {
+      background: rgba(255, 215, 0, 0.1);
+      font-weight: 600;
+    }
+
+    .rank-cell {
+      font-size: 1.2rem;
+      text-align: center;
+      width: 60px;
+    }
+
+    .participant-name {
+      font-weight: 600;
+    }
+
+    .participant-link {
+      color: #667eea;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .participant-link:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+
+    .teams-alive-badge {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* Filters Form */
+    .filters-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: flex-end;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 180px;
+    }
+
+    .filter-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-apply-filters {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .btn-apply-filters:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-clear-filters {
+      color: #6c757d;
+      text-decoration: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+      background: white;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+
+    .btn-clear-filters:hover {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+    }
+
+    .active-filters {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter-badge {
+      background: #e7f3ff;
+      color: #1976d2;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
     @media (max-width: 768px) {
       .matchup-container {
         grid-template-columns: 1fr;
@@ -276,6 +431,35 @@
 
       .team-score {
         text-align: left;
+      }
+
+      .filters-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-group {
+        min-width: 100%;
+      }
+
+      .filter-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .btn-apply-filters,
+      .btn-clear-filters {
+        width: 100%;
+        text-align: center;
+      }
+
+      .standings-table {
+        font-size: 0.8rem;
+      }
+
+      .standings-table th,
+      .standings-table td {
+        padding: 8px 4px;
       }
     }
   </style>
@@ -307,6 +491,121 @@
   </div>
 
   <div class="content-wrapper">
+    <!-- Participant Standings Dashboard -->
+    {% if participant_standings %}
+    <div class="section-card">
+      <div class="section-header" style="background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);">
+        <span>🏆</span>
+        <span>Participant Standings</span>
+      </div>
+      <div class="region-subsection">
+        <div style="overflow-x: auto;">
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Participant</th>
+                <th>Spread W-L</th>
+                <th>Spread %</th>
+                <th>Record</th>
+                <th>Win %</th>
+                <th>Teams Alive</th>
+                <th>Total Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for standing in participant_standings %}
+              <tr class="{% if loop.index == 1 %}leader-row{% endif %}">
+                <td class="rank-cell">
+                  {% if loop.index == 1 %}🥇
+                  {% elif loop.index == 2 %}🥈
+                  {% elif loop.index == 3 %}🥉
+                  {% else %}{{ loop.index }}
+                  {% endif %}
+                </td>
+                <td class="participant-name">
+                  <a href="?participant={{ standing.participant.id }}&year={{ selected_year }}" class="participant-link">
+                    {{ standing.participant.name }}
+                  </a>
+                </td>
+                <td>{{ standing.spread_wins }}-{{ standing.spread_losses }}</td>
+                <td>{{ standing.spread_win_pct }}%</td>
+                <td>{{ standing.wins }}-{{ standing.losses }}</td>
+                <td>{{ standing.win_pct }}%</td>
+                <td>
+                  <span class="teams-alive-badge">
+                    {{ standing.teams_alive }}/{{ standing.total_teams }}
+                  </span>
+                </td>
+                <td>{{ standing.total_points }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Filters Section -->
+    <div class="section-card">
+      <div class="section-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">
+        <span>🔍</span>
+        <span>Filters</span>
+      </div>
+      <div class="region-subsection">
+        <form method="get" class="filters-form">
+          <input type="hidden" name="year" value="{{ selected_year }}">
+
+          <div class="filter-group">
+            <label for="region-filter">Region:</label>
+            <select id="region-filter" name="region" class="filter-select">
+              <option value="">All Regions</option>
+              {% for region in available_regions %}
+              <option value="{{ region }}" {% if filter_region == region %}selected{% endif %}>{{ region }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="round-filter">Round:</label>
+            <select id="round-filter" name="round" class="filter-select">
+              <option value="">All Rounds</option>
+              {% for round in available_rounds %}
+              <option value="{{ round }}" {% if filter_round == round %}selected{% endif %}>Round of {{ round }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="participant-filter">Participant:</label>
+            <select id="participant-filter" name="participant" class="filter-select">
+              <option value="">All Participants</option>
+              {% for p in participants %}
+              <option value="{{ p.id }}" {% if filter_participant == p.id|string %}selected{% endif %}>{{ p.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button type="submit" class="btn-apply-filters">Apply Filters</button>
+            <a href="/table?year={{ selected_year }}" class="btn-clear-filters">Clear All</a>
+          </div>
+        </form>
+
+        {% if filter_region or filter_round or filter_participant %}
+        <div class="active-filters">
+          <strong>Active Filters:</strong>
+          {% if filter_region %}<span class="filter-badge">Region: {{ filter_region }}</span>{% endif %}
+          {% if filter_round %}<span class="filter-badge">Round: {{ filter_round }}</span>{% endif %}
+          {% if filter_participant %}
+            <span class="filter-badge">Participant: {{ participants|selectattr('id', 'equalto', filter_participant|int)|map(attribute='name')|first }}</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
     <!-- Today's Games Section -->
     {% if todays_games_by_region %}
     <div class="section-card">
@@ -528,6 +827,62 @@
         window.location.href = "{{ url_for('home') }}";
       } else {
         sessionStorage.removeItem('viewPreference');
+      }
+    })();
+
+    // Auto-refresh for live games
+    (function() {
+      // Check if there are any live games on the page
+      const liveGames = document.querySelectorAll('.status-live');
+
+      if (liveGames.length > 0) {
+        console.log(`Found ${liveGames.length} live game(s). Auto-refresh enabled.`);
+
+        // Show last updated time
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+
+        // Create or update last updated indicator
+        let updateIndicator = document.getElementById('last-updated');
+        if (!updateIndicator) {
+          updateIndicator = document.createElement('div');
+          updateIndicator.id = 'last-updated';
+          updateIndicator.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          `;
+          document.body.appendChild(updateIndicator);
+        }
+
+        // Countdown timer
+        let secondsRemaining = 60;
+        updateIndicator.innerHTML = `🔄 Last updated: ${timeString} | Refreshing in ${secondsRemaining}s`;
+
+        const countdown = setInterval(() => {
+          secondsRemaining--;
+          updateIndicator.innerHTML = `🔄 Last updated: ${timeString} | Refreshing in ${secondsRemaining}s`;
+
+          if (secondsRemaining <= 0) {
+            clearInterval(countdown);
+          }
+        }, 1000);
+
+        // Refresh the page after 60 seconds
+        setTimeout(() => {
+          console.log('Auto-refreshing page for live game updates...');
+          // Preserve current URL parameters when refreshing
+          window.location.reload();
+        }, 60000); // 60 seconds
+      } else {
+        console.log('No live games found. Auto-refresh disabled.');
       }
     })();
   </script>
