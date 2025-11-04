@@ -1148,6 +1148,7 @@ def create_app() -> Flask:
                 current_owner_id=participant.id
             ).all()
 
+            current_teams_owned = len(current_teams)
             teams_alive = 0
             for team in current_teams:
                 has_future_games = Game.query.filter(
@@ -1213,6 +1214,7 @@ def create_app() -> Flask:
             participant_standings.append({
                 'participant': participant,
                 'total_teams': total_teams,
+                'current_teams_owned': current_teams_owned,
                 'teams_alive': teams_alive,
                 'wins': total_wins,
                 'losses': total_losses,
@@ -1223,8 +1225,10 @@ def create_app() -> Flask:
                 'spread_win_pct': round(spread_wins / (spread_wins + spread_losses) * 100, 1) if (spread_wins + spread_losses) > 0 else 0
             })
 
-        # Sort by spread wins (most important), then wins, then total points
-        participant_standings.sort(key=lambda x: (x['spread_wins'], x['wins'], x['total_points']), reverse=True)
+        # Sort by current teams owned (most important), then spread wins, then regular wins
+        # This ensures championship winner's owner is #1, runner-up owner is #2, etc.
+        # First person to lose all teams ranks last
+        participant_standings.sort(key=lambda x: (x['current_teams_owned'], x['spread_wins'], x['wins']), reverse=True)
 
         # Get available regions and rounds for filter dropdowns
         all_regions = db.session.query(Game.region).filter(Game.year == selected_year).distinct().all()
