@@ -1115,11 +1115,22 @@ def create_app() -> Flask:
         if filter_round:
             games_query = games_query.filter(Game.round == filter_round)
         if filter_participant:
+            # Get all team IDs initially owned by this participant
+            participant_team_ids = [t.id for t in Team.query.filter_by(
+                year=selected_year,
+                initial_owner_id=int(filter_participant)
+            ).all()]
+
             # Filter games where either team is owned by the participant
-            games_query = games_query.join(Team, Game.team1_id == Team.id).filter(
-                (Team.initial_owner_id == int(filter_participant)) |
-                (Game.team2.has(Team.initial_owner_id == int(filter_participant)))
-            )
+            # AND exclude games where both teams are owned by the same participant
+            # (since those shouldn't count towards their record)
+            if participant_team_ids:
+                games_query = games_query.filter(
+                    db.or_(
+                        Game.team1_id.in_(participant_team_ids),
+                        Game.team2_id.in_(participant_team_ids)
+                    )
+                )
 
         games = games_query.order_by(Game.region.asc(), Game.round.asc(), Game.id.asc()).all()
 
@@ -1164,6 +1175,15 @@ def create_app() -> Flask:
                 ).all()
 
                 for game in team_games:
+                    # Get the opponent team to check if it's also owned by this participant
+                    opponent_team_id = game.team2_id if game.team1_id == team.id else game.team1_id
+                    opponent_team = Team.query.get(opponent_team_id)
+
+                    # Skip this game if both teams are owned by the same participant
+                    # (to avoid counting both a win and a loss for same-owner matchups)
+                    if opponent_team and opponent_team.initial_owner_id == participant.id:
+                        continue
+
                     if game.winner_id == team.id:
                         total_wins += 1
                     elif game.winner_id:  # Lost (winner exists but it's not this team)

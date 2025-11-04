@@ -819,17 +819,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Auto-redirect to bracket view on larger screens
-    (function() {
-      const fromBracket = sessionStorage.getItem('viewPreference') === 'table';
-      if (!fromBracket && window.innerWidth >= 1024) {
-        sessionStorage.setItem('viewPreference', 'bracket');
-        window.location.href = "{{ url_for('home') }}";
-      } else {
-        sessionStorage.removeItem('viewPreference');
-      }
-    })();
-
     // Auto-refresh for live games
     (function() {
       // Check if there are any live games on the page
