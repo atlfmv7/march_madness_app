@@ -1115,22 +1115,14 @@ def create_app() -> Flask:
         if filter_round:
             games_query = games_query.filter(Game.round == filter_round)
         if filter_participant:
-            # Get all team IDs initially owned by this participant
-            participant_team_ids = [t.id for t in Team.query.filter_by(
-                year=selected_year,
-                initial_owner_id=int(filter_participant)
-            ).all()]
-
-            # Filter games where either team is owned by the participant
-            # AND exclude games where both teams are owned by the same participant
-            # (since those shouldn't count towards their record)
-            if participant_team_ids:
-                games_query = games_query.filter(
-                    db.or_(
-                        Game.team1_id.in_(participant_team_ids),
-                        Game.team2_id.in_(participant_team_ids)
-                    )
+            # Filter games where the participant was the owner AT THE TIME of the game
+            # This uses team1_owner_id and team2_owner_id which capture ownership at game time
+            games_query = games_query.filter(
+                db.or_(
+                    Game.team1_owner_id == int(filter_participant),
+                    Game.team2_owner_id == int(filter_participant)
                 )
+            )
 
         games = games_query.order_by(Game.region.asc(), Game.round.asc(), Game.id.asc()).all()
 
@@ -1139,25 +1131,25 @@ def create_app() -> Flask:
         participant_standings = []
 
         for participant in participants:
-            # Get all teams initially owned by this participant
-            teams = Team.query.filter_by(
+            # Get count of teams initially owned (for total_teams count)
+            initial_teams = Team.query.filter_by(
                 year=selected_year,
                 initial_owner_id=participant.id
             ).all()
 
-            if not teams:
+            if not initial_teams:
                 continue
 
-            total_teams = len(teams)
-            teams_alive = 0
-            total_wins = 0
-            total_losses = 0
-            total_points = 0
-            spread_wins = 0
-            spread_losses = 0
+            total_teams = len(initial_teams)
 
-            for team in teams:
-                # Check if team is still alive (has future games scheduled or in progress)
+            # Count teams still alive (currently owned with future games)
+            current_teams = Team.query.filter_by(
+                year=selected_year,
+                current_owner_id=participant.id
+            ).all()
+
+            teams_alive = 0
+            for team in current_teams:
                 has_future_games = Game.query.filter(
                     ((Game.team1_id == team.id) | (Game.team2_id == team.id)),
                     Game.year == selected_year,
@@ -1167,40 +1159,56 @@ def create_app() -> Flask:
                 if has_future_games:
                     teams_alive += 1
 
-                # Count wins/losses
-                team_games = Game.query.filter(
-                    ((Game.team1_id == team.id) | (Game.team2_id == team.id)),
-                    Game.year == selected_year,
-                    Game.status == "Final"
-                ).all()
+            # Get all FINAL games where this participant was the owner at the time
+            # Using team1_owner_id and team2_owner_id fields which capture ownership at game time
+            participant_games = Game.query.filter(
+                Game.year == selected_year,
+                Game.status == "Final",
+                db.or_(
+                    Game.team1_owner_id == participant.id,
+                    Game.team2_owner_id == participant.id
+                )
+            ).all()
 
-                for game in team_games:
-                    # Get the opponent team to check if it's also owned by this participant
-                    opponent_team_id = game.team2_id if game.team1_id == team.id else game.team1_id
-                    opponent_team = Team.query.get(opponent_team_id)
+            total_wins = 0
+            total_losses = 0
+            total_points = 0
+            spread_wins = 0
+            spread_losses = 0
 
-                    # Skip this game if both teams are owned by the same participant
-                    # (to avoid counting both a win and a loss for same-owner matchups)
-                    if opponent_team and opponent_team.initial_owner_id == participant.id:
-                        continue
+            for game in participant_games:
+                # Skip games where participant owned BOTH teams (shouldn't count for record)
+                if game.team1_owner_id == participant.id and game.team2_owner_id == participant.id:
+                    continue
 
-                    if game.winner_id == team.id:
-                        total_wins += 1
-                    elif game.winner_id:  # Lost (winner exists but it's not this team)
-                        total_losses += 1
+                # Determine which team the participant owned in this game
+                participant_team_id = None
+                if game.team1_owner_id == participant.id:
+                    participant_team_id = game.team1_id
+                elif game.team2_owner_id == participant.id:
+                    participant_team_id = game.team2_id
 
-                    # Count spread wins/losses
-                    spread_winner = game.spread_winner_team_id()
-                    if spread_winner == team.id:
-                        spread_wins += 1
-                    elif spread_winner and spread_winner != team.id:
-                        spread_losses += 1
+                if not participant_team_id:
+                    continue
 
-                    # Sum up points scored
-                    if game.team1_id == team.id and game.team1_score is not None:
-                        total_points += game.team1_score
-                    elif game.team2_id == team.id and game.team2_score is not None:
-                        total_points += game.team2_score
+                # Count win/loss
+                if game.winner_id == participant_team_id:
+                    total_wins += 1
+                elif game.winner_id:  # Lost (winner exists but it's not this team)
+                    total_losses += 1
+
+                # Count spread wins/losses
+                spread_winner = game.spread_winner_team_id()
+                if spread_winner == participant_team_id:
+                    spread_wins += 1
+                elif spread_winner and spread_winner != participant_team_id:
+                    spread_losses += 1
+
+                # Sum up points scored
+                if game.team1_id == participant_team_id and game.team1_score is not None:
+                    total_points += game.team1_score
+                elif game.team2_id == participant_team_id and game.team2_score is not None:
+                    total_points += game.team2_score
 
             participant_standings.append({
                 'participant': participant,
