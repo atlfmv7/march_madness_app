@@ -1327,6 +1327,65 @@ def create_app() -> Flask:
         ]
         past_games.sort(key=get_sortable_datetime, reverse=True)
 
+        # Calculate tournament high and low scores for stats display
+        # Same logic as bracket page - uses initial owner for credit
+        high_score_info = None
+        low_score_info = None
+
+        completed_games = [g for g in games if g.status == "Final"]
+
+        if completed_games:
+            # Find all individual scores with team and original owner info
+            all_scores = []
+            for game in completed_games:
+                if game.team1_score is not None:
+                    all_scores.append({
+                        'score': game.team1_score,
+                        'team': game.team1,
+                        'owner_id': game.team1.initial_owner_id,
+                        'game': game
+                    })
+                if game.team2_score is not None:
+                    all_scores.append({
+                        'score': game.team2_score,
+                        'team': game.team2,
+                        'owner_id': game.team2.initial_owner_id,
+                        'game': game
+                    })
+
+            if all_scores:
+                # Find high score
+                high_score_data = max(all_scores, key=lambda x: x['score'])
+                high_score_owner = None
+                if high_score_data['owner_id']:
+                    high_score_owner = db.session.get(Participant, high_score_data['owner_id'])
+
+                high_score_info = {
+                    'score': high_score_data['score'],
+                    'team': high_score_data['team'],
+                    'owner': high_score_owner,
+                    'round': high_score_data['game'].round
+                }
+
+                # Find low score
+                low_score_data = min(all_scores, key=lambda x: x['score'])
+                low_score_owner = None
+                if low_score_data['owner_id']:
+                    low_score_owner = db.session.get(Participant, low_score_data['owner_id'])
+
+                low_score_info = {
+                    'score': low_score_data['score'],
+                    'team': low_score_data['team'],
+                    'owner': low_score_owner,
+                    'round': low_score_data['game'].round
+                }
+
+        # Tournament progress stats
+        total_games = len(games)
+        games_completed = len([g for g in games if g.status == "Final"])
+        games_in_progress = len([g for g in games if g.status == "In Progress"])
+        games_scheduled = len([g for g in games if g.status == "Scheduled"])
+
         return render_template(
             "index.html",
             message=f"Loaded games for {selected_year}.",
@@ -1342,6 +1401,12 @@ def create_app() -> Flask:
             filter_region=filter_region,
             filter_round=filter_round,
             filter_participant=filter_participant,
+            high_score=high_score_info,
+            low_score=low_score_info,
+            total_games=total_games,
+            games_completed=games_completed,
+            games_in_progress=games_in_progress,
+            games_scheduled=games_scheduled,
         )
 
     # Create tables once at startup (safe no-op if already exist)
