@@ -848,8 +848,11 @@
         <span>Participant Standings</span>
       </div>
       <div class="region-subsection">
-        <div style="margin-bottom: 15px;">
+        <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <input type="text" id="participantSearch" placeholder="🔍 Search participants..." style="width: 100%; max-width: 400px; padding: 10px 15px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.95rem;">
+          <button onclick="exportStandingsToCSV()" class="btn btn-sm btn-success">
+            📥 Export Standings
+          </button>
         </div>
         <div style="overflow-x: auto;">
           <table class="standings-table">
@@ -1113,9 +1116,14 @@
     <!-- Today's Games Section -->
     {% if todays_games_by_region %}
     <div class="section-card">
-      <div class="section-header today">
-        <span>🔥</span>
-        <span>Today's Games</span>
+      <div class="section-header today" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span>🔥</span>
+          <span>Today's Games</span>
+        </div>
+        <button onclick="exportGamesToCSV('today')" class="btn btn-sm btn-light" style="font-size: 0.8rem;">
+          📥 Export
+        </button>
       </div>
       {% for region, games in todays_games_by_region.items() %}
       <div class="region-subsection">
@@ -1203,9 +1211,14 @@
     <!-- Upcoming Games Section -->
     {% if upcoming_games %}
     <div class="section-card">
-      <div class="section-header upcoming">
-        <span>📅</span>
-        <span>Upcoming Games</span>
+      <div class="section-header upcoming" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span>📅</span>
+          <span>Upcoming Games</span>
+        </div>
+        <button onclick="exportGamesToCSV('upcoming')" class="btn btn-sm btn-light" style="font-size: 0.8rem;">
+          📥 Export
+        </button>
       </div>
       <div class="region-subsection">
         {% for g in upcoming_games %}
@@ -1270,9 +1283,14 @@
     <!-- Past Games Section -->
     {% if past_games %}
     <div class="section-card">
-      <div class="section-header past">
-        <span>📊</span>
-        <span>Past Games</span>
+      <div class="section-header past" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span>📊</span>
+          <span>Past Games</span>
+        </div>
+        <button onclick="exportGamesToCSV('past')" class="btn btn-sm btn-light" style="font-size: 0.8rem;">
+          📥 Export
+        </button>
       </div>
       <div class="region-subsection">
         {% for g in past_games %}
@@ -1436,6 +1454,133 @@
           if (expandIcon) expandIcon.textContent = '▼';
         }
       }
+    }
+
+    // CSV Export Functions
+    function exportStandingsToCSV() {
+      const table = document.querySelector('.standings-table');
+      if (!table) return;
+
+      const rows = [];
+
+      // Add header row
+      const headers = ['Rank', 'Participant', 'Spread W-L', 'Spread %', 'Teams Alive'];
+      rows.push(headers.join(','));
+
+      // Add data rows (only main rows, not detail rows)
+      const dataRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => {
+        return !row.classList.contains('teams-detail-row');
+      });
+
+      dataRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 5) {
+          const rank = cells[0].textContent.trim();
+          const participant = cells[1].textContent.trim();
+          const spreadWL = cells[2].textContent.trim();
+          const spreadPct = cells[3].textContent.trim();
+          const teamsAlive = cells[4].textContent.trim().split('\n')[0].trim(); // Remove expand icon
+
+          rows.push([rank, `"${participant}"`, spreadWL, spreadPct, teamsAlive].join(','));
+        }
+      });
+
+      // Create and download CSV
+      const csvContent = rows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', `standings_${new Date().toISOString().slice(0,10)}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportGamesToCSV(section) {
+      const games = [];
+
+      // Add header row
+      const headers = ['Round', 'Region', 'Status', 'Team 1', 'Team 1 Seed', 'Team 1 Owner', 'Team 1 Score', 'Team 2', 'Team 2 Seed', 'Team 2 Owner', 'Team 2 Score', 'Spread', 'Spread Winner', 'Game Time'];
+      games.push(headers.join(','));
+
+      // Select the appropriate section
+      let sectionElement;
+      if (section === 'today') {
+        sectionElement = document.querySelector('.section-header.today')?.closest('.section-card');
+      } else if (section === 'upcoming') {
+        sectionElement = document.querySelector('.section-header.upcoming')?.closest('.section-card');
+      } else if (section === 'past') {
+        sectionElement = document.querySelector('.section-header.past')?.closest('.section-card');
+      }
+
+      if (!sectionElement) return;
+
+      // Extract game data from cards
+      const gameCards = sectionElement.querySelectorAll('.game-card');
+      gameCards.forEach(card => {
+        const round = card.querySelector('.game-round')?.textContent.trim() || '';
+        const status = card.querySelector('.game-status-badge')?.textContent.replace(/[🟢🟡⚪]/g, '').trim() || '';
+        const gameTime = card.querySelector('.game-time')?.textContent.trim() || '';
+
+        const teamBlocks = card.querySelectorAll('.team-block');
+        const team1Name = teamBlocks[0]?.querySelector('.team-name')?.textContent.trim() || '';
+        const team1Owner = teamBlocks[0]?.querySelector('.team-owner')?.textContent.trim() || '';
+        const team1Score = teamBlocks[0]?.querySelector('.team-score')?.textContent.trim() || '';
+
+        const team2Name = teamBlocks[1]?.querySelector('.team-name')?.textContent.trim() || '';
+        const team2Owner = teamBlocks[1]?.querySelector('.team-owner')?.textContent.trim() || '';
+        const team2Score = teamBlocks[1]?.querySelector('.team-score')?.textContent.trim() || '';
+
+        const spread = card.querySelector('.game-spread')?.textContent.replace('Spread:', '').trim() || '';
+
+        // Extract seeds from team names
+        const team1SeedMatch = team1Name.match(/\((\d+)\)/);
+        const team2SeedMatch = team2Name.match(/\((\d+)\)/);
+        const team1Seed = team1SeedMatch ? team1SeedMatch[1] : '';
+        const team2Seed = team2SeedMatch ? team2SeedMatch[1] : '';
+
+        // Clean team names (remove seed)
+        const team1Clean = team1Name.replace(/\s*\(\d+\)/, '').trim();
+        const team2Clean = team2Name.replace(/\s*\(\d+\)/, '').trim();
+
+        // Extract region from round text
+        const regionMatch = round.match(/([A-Za-z]+)\s*-/);
+        const region = regionMatch ? regionMatch[1] : '';
+        const roundClean = round.replace(/.*Round of /, 'Round of ');
+
+        games.push([
+          `"${roundClean}"`,
+          `"${region}"`,
+          `"${status}"`,
+          `"${team1Clean}"`,
+          team1Seed,
+          `"${team1Owner}"`,
+          team1Score,
+          `"${team2Clean}"`,
+          team2Seed,
+          `"${team2Owner}"`,
+          team2Score,
+          `"${spread}"`,
+          '',
+          `"${gameTime}"`
+        ].join(','));
+      });
+
+      // Create and download CSV
+      const csvContent = games.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${section}_games_${new Date().toISOString().slice(0,10)}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     // Participant search functionality
