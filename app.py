@@ -1258,6 +1258,7 @@ def create_app() -> Flask:
                 'total_teams': total_teams,
                 'current_teams_owned': current_teams_owned,
                 'teams_alive': teams_alive,
+                'current_teams': current_teams,  # List of Team objects currently owned
                 'best_placement': best_placement,
                 'wins': total_wins,
                 'losses': total_losses,

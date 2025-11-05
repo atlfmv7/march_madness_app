@@ -323,6 +323,72 @@
       border-radius: 12px;
       font-size: 0.85rem;
       font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .teams-alive-cell.clickable {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .teams-alive-cell.clickable:hover {
+      background-color: #f0f4f8;
+    }
+
+    .expand-icon {
+      font-size: 0.7rem;
+      color: #1976d2;
+    }
+
+    .teams-detail-row {
+      background-color: #f8f9fa;
+    }
+
+    .teams-list-container {
+      padding: 16px;
+    }
+
+    .teams-list-header {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .teams-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .team-item {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .team-seed {
+      color: #6c757d;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .team-name-detail {
+      color: #212529;
+      font-weight: 500;
+    }
+
+    .team-region {
+      color: #6c757d;
+      font-size: 0.75rem;
+      margin-left: 4px;
     }
 
     /* Filters Form */
@@ -512,7 +578,7 @@
             </thead>
             <tbody>
               {% for standing in participant_standings %}
-              <tr class="{% if loop.index == 1 %}leader-row{% endif %}">
+              <tr class="{% if loop.index == 1 %}leader-row{% endif %}" data-participant-id="{{ standing.participant.id }}">
                 <td class="rank-cell">
                   {% if loop.index == 1 %}🥇
                   {% elif loop.index == 2 %}🥈
@@ -527,12 +593,35 @@
                 </td>
                 <td>{{ standing.spread_wins }}-{{ standing.spread_losses }}</td>
                 <td>{{ standing.spread_win_pct }}%</td>
-                <td>
+                <td class="teams-alive-cell {% if standing.current_teams %}clickable{% endif %}"
+                    onclick="toggleTeamsList({{ standing.participant.id }})"
+                    title="{% if standing.current_teams %}Click to view teams{% endif %}">
                   <span class="teams-alive-badge">
                     {{ standing.teams_alive }}/{{ standing.total_teams }}
+                    {% if standing.current_teams %}
+                    <span class="expand-icon">▼</span>
+                    {% endif %}
                   </span>
                 </td>
               </tr>
+              {% if standing.current_teams %}
+              <tr class="teams-detail-row" id="teams-row-{{ standing.participant.id }}" style="display: none;">
+                <td colspan="5">
+                  <div class="teams-list-container">
+                    <div class="teams-list-header">Teams Currently Owned:</div>
+                    <div class="teams-list">
+                      {% for team in standing.current_teams %}
+                      <div class="team-item">
+                        <span class="team-seed">({{ team.seed }})</span>
+                        <span class="team-name-detail">{{ team.name }}</span>
+                        <span class="team-region">{{ team.region }}</span>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% endif %}
               {% endfor %}
             </tbody>
           </table>
@@ -868,6 +957,23 @@
         console.log('No live games found. Auto-refresh disabled.');
       }
     })();
+
+    // Toggle teams list in standings table
+    function toggleTeamsList(participantId) {
+      const teamsRow = document.getElementById(`teams-row-${participantId}`);
+      const participantRow = document.querySelector(`tr[data-participant-id="${participantId}"]`);
+      const expandIcon = participantRow.querySelector('.expand-icon');
+
+      if (teamsRow) {
+        if (teamsRow.style.display === 'none') {
+          teamsRow.style.display = 'table-row';
+          if (expandIcon) expandIcon.textContent = '▲';
+        } else {
+          teamsRow.style.display = 'none';
+          if (expandIcon) expandIcon.textContent = '▼';
+        }
+      }
+    }
   </script>
 </body>
 </html>
