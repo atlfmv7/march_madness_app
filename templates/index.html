@@ -17,6 +17,45 @@
     body {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
+      transition: background 0.3s ease;
+    }
+
+    /* Light mode styles */
+    body.light-mode {
+      background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    }
+
+    body.light-mode .nav-bar {
+      background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+    }
+
+    body.light-mode .section-card {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    body.light-mode .game-card {
+      background: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Theme toggle button */
+    .theme-toggle {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: white;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
     }
 
     .content-wrapper {
@@ -108,6 +147,42 @@
       color: #6c757d;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    .game-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .game-status-badge.final {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .game-status-badge.in-progress {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .game-status-badge.scheduled {
+      background: #e2e3e5;
+      color: #383d41;
+      border: 1px solid #d6d8db;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
 
     .game-time {
@@ -279,6 +354,32 @@
       color: #495057;
       border-bottom: 2px solid #dee2e6;
       white-space: nowrap;
+    }
+
+    .standings-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s;
+    }
+
+    .standings-table th.sortable:hover {
+      background: #e9ecef;
+    }
+
+    .standings-table th.sortable .sort-arrow {
+      font-size: 0.7rem;
+      color: #adb5bd;
+      margin-left: 4px;
+    }
+
+    .standings-table th.sortable.sort-asc .sort-arrow::before {
+      content: '▲';
+      color: #667eea;
+    }
+
+    .standings-table th.sortable.sort-desc .sort-arrow::before {
+      content: '▼';
+      color: #667eea;
     }
 
     .standings-table td {
@@ -666,6 +767,9 @@
           </select>
         </form>
         {% endif %}
+        <button id="themeToggle" class="theme-toggle" title="Toggle light/dark mode">
+          <span id="themeIcon">☀️</span>
+        </button>
         <a href="{{ url_for('home') }}" class="btn btn-sm btn-light">Visual Bracket</a>
         <a href="{{ url_for('admin') }}" class="btn btn-sm btn-light">Admin</a>
       </div>
@@ -681,20 +785,40 @@
         <span>Participant Standings</span>
       </div>
       <div class="region-subsection">
+        <div style="margin-bottom: 15px;">
+          <input type="text" id="participantSearch" placeholder="🔍 Search participants..." style="width: 100%; max-width: 400px; padding: 10px 15px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.95rem;">
+        </div>
         <div style="overflow-x: auto;">
           <table class="standings-table">
             <thead>
               <tr>
-                <th>Rank</th>
-                <th>Participant</th>
-                <th>Spread W-L</th>
-                <th>Spread %</th>
-                <th>Teams Alive</th>
+                <th class="sortable" data-sort="rank" title="Click to sort">
+                  Rank <span class="sort-arrow"></span>
+                </th>
+                <th class="sortable" data-sort="participant" title="Click to sort">
+                  Participant <span class="sort-arrow"></span>
+                </th>
+                <th class="sortable" data-sort="spread-wins" title="Click to sort">
+                  Spread W-L <span class="sort-arrow"></span>
+                </th>
+                <th class="sortable" data-sort="spread-pct" title="Click to sort">
+                  Spread % <span class="sort-arrow"></span>
+                </th>
+                <th class="sortable" data-sort="teams-alive" title="Click to sort">
+                  Teams Alive <span class="sort-arrow"></span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {% for standing in participant_standings %}
-              <tr class="{% if loop.index == 1 %}leader-row{% endif %}" data-participant-id="{{ standing.participant.id }}">
+              <tr class="{% if loop.index == 1 %}leader-row{% endif %}"
+                  data-participant-id="{{ standing.participant.id }}"
+                  data-rank="{{ loop.index }}"
+                  data-participant-name="{{ standing.participant.name }}"
+                  data-spread-wins="{{ standing.spread_wins }}"
+                  data-spread-pct="{{ standing.spread_win_pct }}"
+                  data-teams-alive="{{ standing.teams_alive }}"
+                  data-total-teams="{{ standing.total_teams }}">
                 <td class="rank-cell">
                   {% if loop.index == 1 %}🥇
                   {% elif loop.index == 2 %}🥈
@@ -882,9 +1006,18 @@
         <div class="game-card">
           <div class="game-header">
             <div class="game-round">Round of {{ g.round }}</div>
-            {% if g.game_time %}
-            <div class="game-time">{{ format_game_time(g.game_time) }}</div>
-            {% endif %}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              {% if g.status == "Final" %}
+              <span class="game-status-badge final">🟢 Final</span>
+              {% elif g.status == "In Progress" %}
+              <span class="game-status-badge in-progress">🟡 Live</span>
+              {% else %}
+              <span class="game-status-badge scheduled">⚪ Scheduled</span>
+              {% endif %}
+              {% if g.game_time %}
+              <div class="game-time">{{ format_game_time(g.game_time) }}</div>
+              {% endif %}
+            </div>
           </div>
           <div class="matchup-container">
             <div class="team-block">
@@ -953,9 +1086,18 @@
         <div class="game-card">
           <div class="game-header">
             <div class="game-round">{{ g.region }} - Round of {{ g.round }}</div>
-            {% if g.game_time %}
-            <div class="game-time">{{ format_game_time(g.game_time) }}</div>
-            {% endif %}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              {% if g.status == "Final" %}
+              <span class="game-status-badge final">🟢 Final</span>
+              {% elif g.status == "In Progress" %}
+              <span class="game-status-badge in-progress">🟡 Live</span>
+              {% else %}
+              <span class="game-status-badge scheduled">⚪ Scheduled</span>
+              {% endif %}
+              {% if g.game_time %}
+              <div class="game-time">{{ format_game_time(g.game_time) }}</div>
+              {% endif %}
+            </div>
           </div>
           <div class="matchup-container">
             <div class="team-block">
@@ -1006,9 +1148,18 @@
         <div class="game-card">
           <div class="game-header">
             <div class="game-round">{{ g.region }} - Round of {{ g.round }}</div>
-            {% if g.game_time %}
-            <div class="game-time">{{ format_game_time(g.game_time) }}</div>
-            {% endif %}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              {% if g.status == "Final" %}
+              <span class="game-status-badge final">🟢 Final</span>
+              {% elif g.status == "In Progress" %}
+              <span class="game-status-badge in-progress">🟡 Live</span>
+              {% else %}
+              <span class="game-status-badge scheduled">⚪ Scheduled</span>
+              {% endif %}
+              {% if g.game_time %}
+              <div class="game-time">{{ format_game_time(g.game_time) }}</div>
+              {% endif %}
+            </div>
           </div>
           <div class="matchup-container">
             <div class="team-block">
@@ -1150,6 +1301,209 @@
         }
       }
     }
+
+    // Participant search functionality
+    (function() {
+      const searchInput = document.getElementById('participantSearch');
+      if (!searchInput) return;
+
+      const table = document.querySelector('.standings-table');
+      if (!table) return;
+
+      const tbody = table.querySelector('tbody');
+
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+          return !row.classList.contains('teams-detail-row');
+        });
+
+        rows.forEach(row => {
+          const participantName = row.dataset.participantName?.toLowerCase() || '';
+          const detailRow = tbody.querySelector(`#teams-row-${row.dataset.participantId}`);
+
+          if (searchTerm === '' || participantName.includes(searchTerm)) {
+            row.style.display = '';
+            // Keep detail row hidden unless it was already expanded
+            if (detailRow && detailRow.style.display === 'table-row') {
+              detailRow.style.display = 'table-row';
+            } else if (detailRow) {
+              detailRow.style.display = 'none';
+            }
+          } else {
+            row.style.display = 'none';
+            if (detailRow) {
+              detailRow.style.display = 'none';
+            }
+          }
+        });
+      });
+    })();
+
+    // Theme toggle functionality
+    (function() {
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      const body = document.body;
+
+      // Check for saved theme preference or default to dark mode
+      const currentTheme = localStorage.getItem('tableTheme') || 'dark';
+
+      // Apply the current theme on page load
+      if (currentTheme === 'light') {
+        body.classList.add('light-mode');
+        themeIcon.textContent = '🌙';
+      } else {
+        themeIcon.textContent = '☀️';
+      }
+
+      // Toggle theme when button is clicked
+      themeToggle.addEventListener('click', function() {
+        body.classList.toggle('light-mode');
+
+        // Update icon and save preference
+        if (body.classList.contains('light-mode')) {
+          themeIcon.textContent = '🌙';
+          localStorage.setItem('tableTheme', 'light');
+        } else {
+          themeIcon.textContent = '☀️';
+          localStorage.setItem('tableTheme', 'dark');
+        }
+      });
+    })();
+
+    // Sortable standings table
+    (function() {
+      const table = document.querySelector('.standings-table');
+      if (!table) return;
+
+      const tbody = table.querySelector('tbody');
+      const headers = table.querySelectorAll('th.sortable');
+      let currentSort = { column: null, direction: null };
+
+      headers.forEach(header => {
+        header.addEventListener('click', () => {
+          const sortKey = header.dataset.sort;
+
+          // Determine sort direction
+          if (currentSort.column === sortKey) {
+            if (currentSort.direction === 'asc') {
+              currentSort.direction = 'desc';
+            } else if (currentSort.direction === 'desc') {
+              currentSort.direction = null;
+              currentSort.column = null;
+            } else {
+              currentSort.direction = 'asc';
+            }
+          } else {
+            currentSort.column = sortKey;
+            currentSort.direction = 'asc';
+          }
+
+          // Update header styles
+          headers.forEach(h => {
+            h.classList.remove('sort-asc', 'sort-desc');
+          });
+
+          if (currentSort.direction) {
+            header.classList.add(`sort-${currentSort.direction}`);
+          }
+
+          // Sort the table
+          sortTable(sortKey, currentSort.direction);
+        });
+      });
+
+      function sortTable(sortKey, direction) {
+        // Get all main rows (not detail rows)
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+          return !row.classList.contains('teams-detail-row');
+        });
+
+        if (!direction) {
+          // Reset to original order (by rank)
+          rows.sort((a, b) => {
+            return parseInt(a.dataset.rank) - parseInt(b.dataset.rank);
+          });
+        } else {
+          rows.sort((a, b) => {
+            let aVal, bVal;
+
+            switch(sortKey) {
+              case 'rank':
+                aVal = parseInt(a.dataset.rank);
+                bVal = parseInt(b.dataset.rank);
+                break;
+              case 'participant':
+                aVal = a.dataset.participantName.toLowerCase();
+                bVal = b.dataset.participantName.toLowerCase();
+                return direction === 'asc'
+                  ? aVal.localeCompare(bVal)
+                  : bVal.localeCompare(aVal);
+              case 'spread-wins':
+                aVal = parseInt(a.dataset.spreadWins);
+                bVal = parseInt(b.dataset.spreadWins);
+                break;
+              case 'spread-pct':
+                aVal = parseFloat(a.dataset.spreadPct);
+                bVal = parseFloat(b.dataset.spreadPct);
+                break;
+              case 'teams-alive':
+                aVal = parseInt(a.dataset.teamsAlive);
+                bVal = parseInt(b.dataset.teamsAlive);
+                break;
+              default:
+                return 0;
+            }
+
+            return direction === 'asc' ? aVal - bVal : bVal - aVal;
+          });
+        }
+
+        // Re-insert rows in sorted order
+        rows.forEach(row => {
+          const participantId = row.dataset.participantId;
+          const detailRow = tbody.querySelector(`#teams-row-${participantId}`);
+
+          tbody.appendChild(row);
+          if (detailRow) {
+            tbody.appendChild(detailRow);
+          }
+        });
+
+        // Update rank display and leader highlighting
+        updateRankDisplay(rows);
+      }
+
+      function updateRankDisplay(sortedRows) {
+        sortedRows.forEach((row, index) => {
+          const rankCell = row.querySelector('.rank-cell');
+          row.classList.remove('leader-row');
+
+          if (currentSort.direction === null || currentSort.column === 'rank') {
+            // Show original ranks with medals
+            const originalRank = parseInt(row.dataset.rank);
+            if (originalRank === 1) {
+              rankCell.textContent = '🥇';
+              row.classList.add('leader-row');
+            } else if (originalRank === 2) {
+              rankCell.textContent = '🥈';
+            } else if (originalRank === 3) {
+              rankCell.textContent = '🥉';
+            } else {
+              rankCell.textContent = originalRank;
+            }
+          } else {
+            // Show current position numbers
+            rankCell.textContent = index + 1;
+            if (index === 0) {
+              row.classList.add('leader-row');
+            }
+          }
+        });
+      }
+    })();
   </script>
 </body>
 </html>
