@@ -1178,8 +1178,8 @@ def create_app() -> Flask:
             spread_losses = 0
 
             # Calculate tournament placement (best finish while owning a team)
-            # Lower placement = better (1 = champion, 2 = runner-up, etc.)
-            best_placement = 999  # Default: eliminated early or no games
+            # Higher placement = better (100 = champion, 99 = runner-up, etc.)
+            best_placement = 0  # Default: eliminated early or no games
 
             for game in participant_games:
                 # Skip games where participant owned BOTH teams (shouldn't count for record)
@@ -1219,25 +1219,25 @@ def create_app() -> Flask:
                     # Lost this game - this determines their placement
                     if is_championship:
                         # Lost championship - 2nd place
-                        best_placement = min(best_placement, 1)
+                        best_placement = max(best_placement, 99)
                     elif round_num == 4:
                         # Lost Final Four - 3rd/4th place
-                        best_placement = min(best_placement, 2)
+                        best_placement = max(best_placement, 98)
                     elif round_num == 8:
                         # Lost Elite Eight - 5th-8th place
-                        best_placement = min(best_placement, 3)
+                        best_placement = max(best_placement, 97)
                     elif round_num == 16:
                         # Lost Sweet Sixteen - 9th-16th place
-                        best_placement = min(best_placement, 4)
+                        best_placement = max(best_placement, 96)
                     elif round_num == 32:
                         # Lost Round of 32 - 17th-32nd place
-                        best_placement = min(best_placement, 5)
+                        best_placement = max(best_placement, 95)
                     elif round_num:
                         # Lost Round of 64 or earlier - last place
-                        best_placement = min(best_placement, 6)
+                        best_placement = max(best_placement, 94)
                 elif game.winner_id == participant_team_id and is_championship:
                     # Won the championship - this is 1st place
-                    best_placement = min(best_placement, 0)
+                    best_placement = max(best_placement, 100)
                 # Winning earlier rounds doesn't determine placement - need to see how far they go
 
                 # Count spread wins/losses
@@ -1268,10 +1268,10 @@ def create_app() -> Flask:
                 'spread_win_pct': round(spread_wins / (spread_wins + spread_losses) * 100, 1) if (spread_wins + spread_losses) > 0 else 0
             })
 
-        # Sort by tournament placement (lower is better), then spread wins as tiebreaker
-        # best_placement: 1 = champion, 2 = runner-up, 3 = Final Four loser, etc.
-        # This ensures championship winner's owner is #1, runner-up is #2, Final Four are #3-4, etc.
-        participant_standings.sort(key=lambda x: (x['best_placement'], -x['spread_wins'], -x['wins']))
+        # Sort by tournament placement (higher is better with our numbering), then spread wins as tiebreaker
+        # best_placement: 0 = champion, 1 = runner-up, 2 = Final Four loser, etc.
+        # Using reverse=True so higher placement values rank lower
+        participant_standings.sort(key=lambda x: (x['best_placement'], -x['spread_wins'], -x['wins']), reverse=True)
 
         # Get available regions and rounds for filter dropdowns
         all_regions = db.session.query(Game.region).filter(Game.year == selected_year).distinct().all()
