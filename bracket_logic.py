@@ -155,12 +155,15 @@ def propagate_to_next_round(game: Game, team_winner: Team, owner_winner: Optiona
     - next_game_slot == 1 -> fill next_game.team1_id + team1_owner_id
     - next_game_slot == 2 -> fill next_game.team2_id + team2_owner_id
     Also updates the advancing Team.current_owner_id to owner_winner.id
-    
+
     CRITICAL: When a team advances to the next round, we MUST set the next game's
     owner field to whoever won the spread in THIS game. This preserves the correct
     ownership history - each game shows who owned the teams when THAT game was played.
-    
+
     If owner_winner is None, the team advances but keeps its current owner.
+
+    ALSO: When a team loses, they are eliminated and should have their current_owner_id
+    set to None so they don't appear in the owner's "current teams" list.
     """
     if not game.next_game_id or not game.next_game_slot:
         return  # nothing to do
@@ -168,6 +171,13 @@ def propagate_to_next_round(game: Game, team_winner: Team, owner_winner: Optiona
     next_game = db.session.get(Game, game.next_game_id)
     if not next_game:
         return
+
+    # Determine the losing team (the one that didn't win)
+    team_loser = game.team2 if team_winner.id == game.team1_id else game.team1
+
+    # Remove ownership from the losing team (they're eliminated)
+    if team_loser:
+        team_loser.current_owner_id = None
 
     # Update the advancing team's *current* owner record (if we have a winner)
     # This affects future games
