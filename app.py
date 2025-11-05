@@ -1204,24 +1204,41 @@ def create_app() -> Flask:
 
                 # Calculate tournament placement based on this game
                 # Championship winner = 1st place, championship loser = 2nd, etc.
+
+                # Handle both numeric and string round values
+                is_championship = game.round == "2" or game.round == "Championship"
+
                 try:
                     round_num = int(game.round)
-                    if game.winner_id == participant_team_id:
-                        # Won this game
-                        if round_num == 2:  # Won championship
-                            best_placement = min(best_placement, 1)
-                        # Winning earlier rounds doesn't determine placement - need to see how far they go
-                    else:
-                        # Lost this game - this determines their placement
-                        # Formula: placement = round / 2 + 1
-                        # Round 2 (championship) loser = 2nd place
-                        # Round 4 (final four) loser = 3rd-4th place
-                        # Round 8 (elite eight) loser = 5th-8th place, etc.
-                        placement = round_num // 2 + 1
-                        best_placement = min(best_placement, placement)
                 except (ValueError, TypeError):
-                    # If round is not a number, skip placement calculation
-                    pass
+                    # Round is not numeric (e.g., "Championship")
+                    round_num = None
+
+                # Check if this is a loss (team didn't win the game)
+                if game.winner_id and game.winner_id != participant_team_id:
+                    # Lost this game - this determines their placement
+                    if is_championship:
+                        # Lost championship - 2nd place
+                        best_placement = min(best_placement, 2)
+                    elif round_num == 4:
+                        # Lost Final Four - 3rd/4th place
+                        best_placement = min(best_placement, 3)
+                    elif round_num == 8:
+                        # Lost Elite Eight - 5th-8th place
+                        best_placement = min(best_placement, 5)
+                    elif round_num == 16:
+                        # Lost Sweet Sixteen - 9th-16th place
+                        best_placement = min(best_placement, 9)
+                    elif round_num == 32:
+                        # Lost Round of 32 - 17th-32nd place
+                        best_placement = min(best_placement, 17)
+                    elif round_num:
+                        # Lost Round of 64 or earlier - 33rd+ place
+                        best_placement = min(best_placement, 33)
+                elif game.winner_id == participant_team_id and is_championship:
+                    # Won the championship - this is 1st place
+                    best_placement = min(best_placement, 1)
+                # Winning earlier rounds doesn't determine placement - need to see how far they go
 
                 # Count spread wins/losses
                 spread_winner = game.spread_winner_team_id()
