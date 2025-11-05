@@ -1219,25 +1219,25 @@ def create_app() -> Flask:
                     # Lost this game - this determines their placement
                     if is_championship:
                         # Lost championship - 2nd place
-                        best_placement = min(best_placement, 2)
+                        best_placement = min(best_placement, 1)
                     elif round_num == 4:
                         # Lost Final Four - 3rd/4th place
-                        best_placement = min(best_placement, 3)
+                        best_placement = min(best_placement, 2)
                     elif round_num == 8:
                         # Lost Elite Eight - 5th-8th place
-                        best_placement = min(best_placement, 5)
+                        best_placement = min(best_placement, 3)
                     elif round_num == 16:
                         # Lost Sweet Sixteen - 9th-16th place
-                        best_placement = min(best_placement, 9)
+                        best_placement = min(best_placement, 4)
                     elif round_num == 32:
                         # Lost Round of 32 - 17th-32nd place
-                        best_placement = min(best_placement, 17)
+                        best_placement = min(best_placement, 5)
                     elif round_num:
-                        # Lost Round of 64 or earlier - 33rd+ place
-                        best_placement = min(best_placement, 33)
+                        # Lost Round of 64 or earlier - last place
+                        best_placement = min(best_placement, 6)
                 elif game.winner_id == participant_team_id and is_championship:
                     # Won the championship - this is 1st place
-                    best_placement = min(best_placement, 1)
+                    best_placement = min(best_placement, 0)
                 # Winning earlier rounds doesn't determine placement - need to see how far they go
 
                 # Count spread wins/losses
