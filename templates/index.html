@@ -185,6 +185,69 @@
       50% { opacity: 0.7; }
     }
 
+    .upset-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      border: 1px solid #ff5252;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+    }
+
+    /* Tournament Insights Cards */
+    .insight-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      border: 2px solid #e9ecef;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .insight-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+      border-color: #dee2e6;
+    }
+
+    .insight-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .insight-label {
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .insight-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #212529;
+      margin-bottom: 6px;
+    }
+
+    .insight-description {
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+
+    body.light-mode .insight-card {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
     .game-time {
       font-size: 0.85rem;
       color: #6c757d;
@@ -930,6 +993,64 @@
     </div>
     {% endif %}
 
+    <!-- Additional Tournament Statistics -->
+    {% if games_completed > 0 %}
+    <div class="section-card">
+      <div class="section-header" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #fff;">
+        <span>📈</span>
+        <span>Tournament Insights</span>
+      </div>
+      <div class="region-subsection">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+
+          <!-- Upsets Count -->
+          <div class="insight-card">
+            <div class="insight-icon">🔥</div>
+            <div class="insight-label">Total Upsets</div>
+            <div class="insight-value">{{ upset_count }}</div>
+            <div class="insight-description">Lower seed victories</div>
+          </div>
+
+          <!-- Highest Scoring Round -->
+          {% if highest_scoring_round %}
+          <div class="insight-card">
+            <div class="insight-icon">💯</div>
+            <div class="insight-label">Highest Scoring Round</div>
+            <div class="insight-value">Round of {{ highest_scoring_round.round }}</div>
+            <div class="insight-description">{{ highest_scoring_round.avg }} pts/game avg ({{ highest_scoring_round.games }} games)</div>
+          </div>
+          {% endif %}
+
+          <!-- Best Region Performance -->
+          {% if region_performance %}
+          {% set best_region = region_performance.items() | selectattr('1.alive', 'gt', 0) | sort(attribute='1.alive', reverse=true) | first %}
+          {% if best_region %}
+          <div class="insight-card">
+            <div class="insight-icon">🌎</div>
+            <div class="insight-label">Leading Region</div>
+            <div class="insight-value">{{ best_region[0] }}</div>
+            <div class="insight-description">{{ best_region[1].alive }}/{{ best_region[1].total }} teams alive</div>
+          </div>
+          {% endif %}
+          {% endif %}
+
+          <!-- Best Seed Performance -->
+          {% if seed_performance %}
+          {% set best_seed = seed_performance.items() | sort(attribute='1.pct', reverse=true) | first %}
+          {% if best_seed %}
+          <div class="insight-card">
+            <div class="insight-icon">🎯</div>
+            <div class="insight-label">Top Performing Seed</div>
+            <div class="insight-value">{{ best_seed[0] }} Seed</div>
+            <div class="insight-description">{{ best_seed[1].alive }}/{{ best_seed[1].total }} alive ({{ best_seed[1].pct }}%)</div>
+          </div>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Filters Section -->
     <div class="section-card">
       <div class="section-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">
@@ -1009,6 +1130,11 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               {% if g.status == "Final" %}
               <span class="game-status-badge final">🟢 Final</span>
+              {% if g.winner_id and g.team1 and g.team2 %}
+                {% if (g.winner_id == g.team1_id and g.team1.seed > g.team2.seed) or (g.winner_id == g.team2_id and g.team2.seed > g.team1.seed) %}
+                <span class="upset-indicator">🔥 UPSET!</span>
+                {% endif %}
+              {% endif %}
               {% elif g.status == "In Progress" %}
               <span class="game-status-badge in-progress">🟡 Live</span>
               {% else %}
@@ -1089,6 +1215,11 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               {% if g.status == "Final" %}
               <span class="game-status-badge final">🟢 Final</span>
+              {% if g.winner_id and g.team1 and g.team2 %}
+                {% if (g.winner_id == g.team1_id and g.team1.seed > g.team2.seed) or (g.winner_id == g.team2_id and g.team2.seed > g.team1.seed) %}
+                <span class="upset-indicator">🔥 UPSET!</span>
+                {% endif %}
+              {% endif %}
               {% elif g.status == "In Progress" %}
               <span class="game-status-badge in-progress">🟡 Live</span>
               {% else %}
@@ -1151,6 +1282,11 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               {% if g.status == "Final" %}
               <span class="game-status-badge final">🟢 Final</span>
+              {% if g.winner_id and g.team1 and g.team2 %}
+                {% if (g.winner_id == g.team1_id and g.team1.seed > g.team2.seed) or (g.winner_id == g.team2_id and g.team2.seed > g.team1.seed) %}
+                <span class="upset-indicator">🔥 UPSET!</span>
+                {% endif %}
+              {% endif %}
               {% elif g.status == "In Progress" %}
               <span class="game-status-badge in-progress">🟡 Live</span>
               {% else %}

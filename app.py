@@ -1386,6 +1386,50 @@ def create_app() -> Flask:
         games_in_progress = len([g for g in games if g.status == "In Progress"])
         games_scheduled = len([g for g in games if g.status == "Scheduled"])
 
+        # Additional statistics calculations
+        # 1. Count upsets (lower seed beats higher seed)
+        upset_count = 0
+        for game in [g for g in games if g.status == "Final" and g.winner_id and g.team1 and g.team2]:
+            if (game.winner_id == game.team1_id and game.team1.seed > game.team2.seed) or \
+               (game.winner_id == game.team2_id and game.team2.seed > game.team1.seed):
+                upset_count += 1
+
+        # 2. Region performance (teams alive by region)
+        region_performance = {}
+        all_teams = Team.query.filter_by(year=selected_year).all()
+        for region in ['East', 'West', 'South', 'Midwest']:
+            region_teams = [t for t in all_teams if t.region == region]
+            alive = len([t for t in region_teams if t.current_owner_id is not None])
+            total = len(region_teams)
+            region_performance[region] = {'alive': alive, 'total': total}
+
+        # 3. Seed performance (teams alive by seed)
+        seed_performance = {}
+        for seed in range(1, 17):  # Seeds 1-16
+            seed_teams = [t for t in all_teams if t.seed == seed]
+            alive = len([t for t in seed_teams if t.current_owner_id is not None])
+            total = len(seed_teams)
+            if total > 0:
+                seed_performance[seed] = {'alive': alive, 'total': total, 'pct': round(alive / total * 100, 1)}
+
+        # 4. Highest-scoring round average
+        round_averages = {}
+        for game in [g for g in games if g.status == "Final" and g.team1_score is not None and g.team2_score is not None]:
+            round_num = game.round
+            total_score = game.team1_score + game.team2_score
+            if round_num not in round_averages:
+                round_averages[round_num] = {'total': 0, 'count': 0}
+            round_averages[round_num]['total'] += total_score
+            round_averages[round_num]['count'] += 1
+
+        highest_scoring_round = None
+        highest_avg = 0
+        for round_num, data in round_averages.items():
+            avg = data['total'] / data['count']
+            if avg > highest_avg:
+                highest_avg = avg
+                highest_scoring_round = {'round': round_num, 'avg': round(avg, 1), 'games': data['count']}
+
         return render_template(
             "index.html",
             message=f"Loaded games for {selected_year}.",
@@ -1407,6 +1451,10 @@ def create_app() -> Flask:
             games_completed=games_completed,
             games_in_progress=games_in_progress,
             games_scheduled=games_scheduled,
+            upset_count=upset_count,
+            region_performance=region_performance,
+            seed_performance=seed_performance,
+            highest_scoring_round=highest_scoring_round,
         )
 
     # Create tables once at startup (safe no-op if already exist)
