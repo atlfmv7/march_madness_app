@@ -528,6 +528,122 @@
         padding: 8px 4px;
       }
     }
+
+    /* Tournament Stats */
+    .tournament-stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 0 auto;
+      max-width: 800px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 300px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .stat-card.high-score {
+      border-color: #ff6b6b;
+    }
+
+    .stat-card.low-score {
+      border-color: #4ecdc4;
+    }
+
+    .stat-icon {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .stat-details {
+      flex: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #212529;
+      margin-bottom: 8px;
+    }
+
+    .stat-card.high-score .stat-value {
+      color: #dc3545;
+    }
+
+    .stat-card.low-score .stat-value {
+      color: #17a2b8;
+    }
+
+    .stat-info {
+      font-size: 0.85rem;
+      color: #495057;
+      line-height: 1.6;
+    }
+
+    .stat-round {
+      display: inline-block;
+      background: rgba(13, 110, 253, 0.1);
+      color: #0d6efd;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-top: 5px;
+    }
+
+    /* Tournament stats responsive */
+    @media (max-width: 768px) {
+      .tournament-stats {
+        flex-direction: column;
+        max-width: 100%;
+        margin: 0;
+      }
+
+      .stat-card {
+        min-width: 100%;
+        padding: 15px;
+      }
+
+      .stat-icon {
+        font-size: 2rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stat-card {
+        padding: 10px;
+      }
+
+      .stat-icon {
+        font-size: 1.5rem;
+      }
+
+      .stat-value {
+        font-size: 1.25rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -626,6 +742,66 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Tournament Stats -->
+    {% if high_score or low_score %}
+    <div class="section-card">
+      <div class="section-header" style="background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);">
+        <span>📊</span>
+        <span>Tournament Stats</span>
+      </div>
+      <div class="region-subsection">
+        <div class="tournament-stats">
+          {% if high_score %}
+          <div class="stat-card high-score">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-details">
+              <div class="stat-label">Tournament High Score</div>
+              <div class="stat-value">{{ high_score.score }} points</div>
+              <div class="stat-info">
+                <strong>{{ high_score.team.name }}</strong> (Seed {{ high_score.team.seed }})
+                <br>
+                Owner: <strong>{{ high_score.owner.name if high_score.owner else "Unknown" }}</strong>
+                <br>
+                <span class="stat-round">Round of {{ high_score.round }}</span>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if low_score %}
+          <div class="stat-card low-score">
+            <div class="stat-icon">❄️</div>
+            <div class="stat-details">
+              <div class="stat-label">Tournament Low Score</div>
+              <div class="stat-value">{{ low_score.score }} points</div>
+              <div class="stat-info">
+                <strong>{{ low_score.team.name }}</strong> (Seed {{ low_score.team.seed }})
+                <br>
+                Owner: <strong>{{ low_score.owner.name if low_score.owner else "Unknown" }}</strong>
+                <br>
+                <span class="stat-round">Round of {{ low_score.round }}</span>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Tournament Progress -->
+        {% if total_games %}
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center; color: #6c757d; font-size: 0.9rem;">
+          <strong>Tournament Progress:</strong> {{ games_completed }} of {{ total_games }} games completed
+          {% if games_in_progress > 0 %}
+          • <span style="color: #ffc107;">{{ games_in_progress }} in progress</span>
+          {% endif %}
+          {% if games_scheduled > 0 %}
+          • <span style="color: #6c757d;">{{ games_scheduled }} scheduled</span>
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
     </div>
     {% endif %}
