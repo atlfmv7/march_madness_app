@@ -1279,3 +1279,38 @@ body.bracket-page.light-mode .bracket-wrapper::before {
   background: rgba(13, 110, 253, 0.1);
   color: #0d6efd;
 }
+
+/* Bracket connector lines */
+.bracket-wrapper {
+  position: relative;
+}
+
+#bracket-connectors {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Connector line color for light mode */
+body.bracket-page.light-mode {
+  --connector-color: #cbd5e0;
+}
+
+/* Connector line color for dark mode */
+body.bracket-page:not(.light-mode) {
+  --connector-color: #4a5568;
+}
+
+.bracket-connector {
+  transition: stroke 0.3s ease;
+}
+
+/* Make matchups appear above connectors */
+.matchup {
+  position: relative;
+  z-index: 2;
+}
