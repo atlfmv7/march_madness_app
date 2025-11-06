@@ -41,27 +41,6 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    /* Theme toggle button */
-    .theme-toggle {
-      background: #FF6600;
-      border: 2px solid white;
-      border-radius: 6px;
-      padding: 6px 12px;
-      color: white;
-      cursor: pointer;
-      font-size: 1.2rem;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-    }
-
-    .theme-toggle:hover {
-      background: #0033A0;
-      transform: scale(1.05);
-    }
-
     .content-wrapper {
       max-width: 1400px;
       margin: 0 auto;
@@ -880,9 +859,6 @@
           </select>
         </form>
         {% endif %}
-        <button id="themeToggle" class="theme-toggle" title="Toggle light/dark mode">
-          <span id="themeIcon">☀️</span>
-        </button>
         <a href="{{ url_for('home') }}" class="btn btn-sm btn-light">Visual Bracket</a>
         <a href="{{ url_for('admin') }}" class="btn btn-sm btn-light">Admin</a>
       </div>
@@ -1466,38 +1442,6 @@
             }
           }
         });
-      });
-    })();
-
-    // Theme toggle functionality
-    (function() {
-      const themeToggle = document.getElementById('themeToggle');
-      const themeIcon = document.getElementById('themeIcon');
-      const body = document.body;
-
-      // Check for saved theme preference or default to dark mode
-      const currentTheme = localStorage.getItem('tableTheme') || 'dark';
-
-      // Apply the current theme on page load
-      if (currentTheme === 'light') {
-        body.classList.add('light-mode');
-        themeIcon.textContent = '🌙';
-      } else {
-        themeIcon.textContent = '☀️';
-      }
-
-      // Toggle theme when button is clicked
-      themeToggle.addEventListener('click', function() {
-        body.classList.toggle('light-mode');
-
-        // Update icon and save preference
-        if (body.classList.contains('light-mode')) {
-          themeIcon.textContent = '🌙';
-          localStorage.setItem('tableTheme', 'light');
-        } else {
-          themeIcon.textContent = '☀️';
-          localStorage.setItem('tableTheme', 'dark');
-        }
       });
     })();
 
