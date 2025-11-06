@@ -576,6 +576,7 @@ def create_app() -> Flask:
                 ("64", 32), ("32", 16), ("16", 8), ("8", 4), ("4", 2), ("2", 1)
             ]
 
+            games_by_round = {}
             # Set game times for Round of 64 spread across today
             # This allows the score ticker to display them
             from datetime import timedelta
@@ -603,6 +604,7 @@ def create_app() -> Flask:
                         round=round_name,
                         region=region,
                         year=year,
+                        status="Scheduled"
                         status="Scheduled",
                         game_time=game_time
                     )
@@ -747,6 +749,11 @@ def create_app() -> Flask:
                         game.team2_owner_id = team2.initial_owner_id
 
     @app.route("/admin/simulate_tournament", methods=["POST"])
+    def admin_simulate_tournament():
+        """Simulate tournament games."""
+        from flask import request, redirect, url_for, flash
+        import random
+
     @local_only
     def admin_simulate_tournament():
         """
@@ -771,6 +778,7 @@ def create_app() -> Flask:
 
         try:
             if action == "simulate_all":
+                # Simulate entire tournament
                 # Simulate entire tournament from current state to championship
                 # Processes all rounds in order: 64 → 32 → 16 → 8 → 4 → 2
                 print(f"\n🏆 Simulating entire {year} tournament...")
@@ -778,6 +786,7 @@ def create_app() -> Flask:
                 rounds = [64, 32, 16, 8, 4, 2]
                 total_games = 0
 
+                for round_num in rounds:
                 # Process each round sequentially
                 for round_num in rounds:
                     # Find all scheduled (not yet played) games in this round
@@ -787,6 +796,10 @@ def create_app() -> Flask:
                         .all()
                     )
 
+                    if not games:
+                        break
+
+                    for game in games:
                     # If no scheduled games in this round, tournament is complete
                     if not games:
                         break
@@ -798,6 +811,7 @@ def create_app() -> Flask:
                             _simulate_single_game(game)
                             total_games += 1
 
+                # Check for champion
                 # Check if tournament is complete and show champion
                 championship_game = (
                     Game.query
@@ -806,6 +820,13 @@ def create_app() -> Flask:
                 )
 
                 if championship_game and championship_game.winner_id:
+                    champion = db.session.get(Team, championship_game.winner_id)
+                    flash(f"🏆 Tournament Complete! Champion: {champion.name} (Seed {champion.seed}) - Owner: {champion.current_owner.name if champion.current_owner else 'Unknown'}", "success")
+                else:
+                    flash(f"✅ Simulated {total_games} games successfully!", "success")
+
+            elif action == "simulate_next":
+                # Simulate next available round
                     # Tournament complete - display champion info
                     champion = db.session.get(Team, championship_game.winner_id)
                     flash(f"🏆 Tournament Complete! Champion: {champion.name} (Seed {champion.seed}) - Owner: {champion.current_owner.name if champion.current_owner else 'Unknown'}", "success")
@@ -837,6 +858,15 @@ def create_app() -> Flask:
 
                         flash(f"✅ Simulated Round of {round_num} ({count} games)", "success")
                         simulated = True
+                        break
+
+                if not simulated:
+                    flash("⚠️ No scheduled games to simulate", "warning")
+
+            else:
+                flash("Invalid action", "error")
+
+        except Exception as e:
                         break  # Only simulate one round
 
                 if not simulated:
@@ -858,6 +888,11 @@ def create_app() -> Flask:
         return redirect(url_for("admin"))
 
     def _simulate_single_game(game):
+        """Helper to simulate a single game."""
+        import random
+        from bracket_logic import evaluate_and_finalize_game
+
+        # Set game owner fields if not set
         """
         Helper function to simulate a single game with realistic scores and outcomes.
 
@@ -881,6 +916,9 @@ def create_app() -> Flask:
         if game.team2_owner_id is None:
             game.team2_owner_id = game.team2.current_owner_id
 
+        # Set spread if not already set
+        if not game.spread or not game.spread_favorite_team_id:
+            if game.team1.seed < game.team2.seed:
         # Set spread if not already set based on seed differences
         # Formula: seed_diff * 1.5 (capped at 15 points)
         # Example: #1 seed vs #16 seed = 15 point spread (max)
@@ -896,6 +934,28 @@ def create_app() -> Flask:
                 game.spread = round(min(seed_diff * 1.5, 15.0), 1)
                 game.spread_favorite_team_id = game.team2.id
             else:
+                game.spread = 0.0
+                game.spread_favorite_team_id = game.team1.id
+
+        # Generate realistic scores (50-95 range)
+        score1 = random.randint(55, 90)
+        score2 = random.randint(55, 90)
+
+        # Ensure no tie
+        while score1 == score2:
+            score2 = random.randint(55, 90)
+
+        # Favor lower seeds (65% chance to win)
+        if game.team1.seed < game.team2.seed:
+            if random.random() > 0.35:
+                if score2 > score1:
+                    score1, score2 = score2, score1
+        elif game.team2.seed < game.team1.seed:
+            if random.random() > 0.35:
+                if score1 > score2:
+                    score1, score2 = score2, score1
+
+        # Set scores and finalize
                 # Equal seeds = pick'em game (no favorite)
                 game.spread = 0.0
                 game.spread_favorite_team_id = game.team1.id
@@ -934,6 +994,16 @@ def create_app() -> Flask:
         game.status = "Final"
         db.session.commit()
 
+        # Evaluate and advance winner
+        evaluate_and_finalize_game(game.id)
+
+    @app.route("/bracket")
+    def bracket():
+        """Visual bracket tree display."""
+        from flask import render_template
+        from models import Team, Participant
+
+        # Get year from query string or default to most recent
         # Evaluate spread winner and advance game winner to next round
         # This calls bracket_logic.py to determine who won against the spread
         # and automatically advances the game winner to the next round
@@ -975,6 +1045,7 @@ def create_app() -> Flask:
         except ValueError:
             selected_year = current_year
 
+        # Get all games for this year, ordered by round and region
         # Fetch all games for the selected tournament year
         # Ordered by region, then round, then game ID for consistent display
         games = (
@@ -984,6 +1055,7 @@ def create_app() -> Flask:
             .all()
         )
 
+        # Group by region
         # Group games by region and round for bracket display
         # Structure: regions[region][round] = [list of games]
         # Example: regions["East"]["64"] = [game1, game2, ...]
@@ -992,6 +1064,7 @@ def create_app() -> Flask:
         for game in games:
             regions[game.region][game.round].append(game)
 
+        # Calculate high and low scores from completed games
         # Get today's games for the ESPN-style score ticker
         # Only shows games scheduled for today's date
         today = datetime.now(timezone.utc).date()
@@ -1009,6 +1082,7 @@ def create_app() -> Flask:
         completed_games = [g for g in games if g.status == "Final"]
 
         if completed_games:
+            # Find all individual scores with team and owner info
             # Find all individual scores with team and original owner info
             # Uses initial_owner_id so the original owner gets credit for high/low scores
             all_scores = []
@@ -1017,6 +1091,7 @@ def create_app() -> Flask:
                     all_scores.append({
                         'score': game.team1_score,
                         'team': game.team1,
+                        'owner_id': game.team1_owner_id,
                         'owner_id': game.team1.initial_owner_id,
                         'game': game
                     })
@@ -1024,6 +1099,7 @@ def create_app() -> Flask:
                     all_scores.append({
                         'score': game.team2_score,
                         'team': game.team2,
+                        'owner_id': game.team2_owner_id,
                         'owner_id': game.team2.initial_owner_id,
                         'game': game
                     })
@@ -1061,6 +1137,7 @@ def create_app() -> Flask:
             years=years,
             selected_year=selected_year,
             high_score=high_score_info,
+            low_score=low_score_info
             low_score=low_score_info,
             todays_games=todays_games
         )

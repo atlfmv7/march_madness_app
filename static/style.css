@@ -356,6 +356,8 @@ body.bracket-page.light-mode .region-name {
   color: #888;
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin-bottom: 8px;
+  position: relative;
   min-height: 18px; /* Ensure consistent label height */
   line-height: 18px;
   position: absolute; /* Position labels absolutely */

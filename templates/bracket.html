@@ -36,11 +36,13 @@
   <div class="nav-bar">
     <div class="nav-content">
       <div class="d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">← March Madness Madness</a>
         <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">March Madness Madness</a>
         <div class="d-flex gap-2">
           <button id="themeToggle" class="theme-toggle" title="Toggle light/dark mode">
             <span id="themeIcon">☀️</span>
           </button>
+          <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light">Table View</a>
           <a href="{{ url_for('table_view') }}" class="btn btn-sm btn-outline-light">Table View</a>
           {% if is_local %}
           <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
@@ -177,6 +179,7 @@
           <div class="round-column round-64">
             <div class="round-label">Round 1</div>
             {% for game in regions["East"]["64"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -219,6 +222,7 @@
           <div class="round-column round-32">
             <div class="round-label">Round 2</div>
             {% for game in regions["East"]["32"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -261,6 +265,7 @@
           <div class="round-column round-16">
             <div class="round-label">Sweet 16</div>
             {% for game in regions["East"]["16"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -303,6 +308,7 @@
           <div class="round-column round-8">
             <div class="round-label">Elite 8</div>
             {% for game in regions["East"]["8"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -352,6 +358,7 @@
           <div class="round-column round-64">
             <div class="round-label">Round 1</div>
             {% for game in regions["South"]["64"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -394,6 +401,7 @@
           <div class="round-column round-32">
             <div class="round-label">Round 2</div>
             {% for game in regions["South"]["32"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -436,6 +444,7 @@
           <div class="round-column round-16">
             <div class="round-label">Sweet 16</div>
             {% for game in regions["South"]["16"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -478,6 +487,7 @@
           <div class="round-column round-8">
             <div class="round-label">Elite 8</div>
             {% for game in regions["South"]["8"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -527,6 +537,7 @@
           <div class="finals-section">
             <div class="finals-title">🏆 FINAL FOUR</div>
             {% for game in ff_games %}
+            <div class="matchup mb-2">
             <div class="matchup mb-2" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -591,6 +602,7 @@
               {% else %}
           <div class="finals-section">
             <div class="finals-title">CHAMPIONSHIP</div>
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ championship.id }}" data-next-game-id="{{ championship.next_game_id or '' }}" data-next-slot="{{ championship.next_game_slot or '' }}">
               {% if championship.spread %}
               <div class="matchup-spread">{{ championship.spread_label() }}</div>
@@ -643,6 +655,7 @@
           <div class="round-column round-8">
             <div class="round-label">Elite 8</div>
             {% for game in regions["West"]["8"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -685,6 +698,7 @@
           <div class="round-column round-16">
             <div class="round-label">Sweet 16</div>
             {% for game in regions["West"]["16"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -727,6 +741,7 @@
           <div class="round-column round-32">
             <div class="round-label">Round 2</div>
             {% for game in regions["West"]["32"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -769,6 +784,7 @@
           <div class="round-column round-64">
             <div class="round-label">Round 1</div>
             {% for game in regions["West"]["64"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -818,6 +834,7 @@
           <div class="round-column round-8">
             <div class="round-label">Elite 8</div>
             {% for game in regions["Midwest"]["8"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -860,6 +877,7 @@
           <div class="round-column round-16">
             <div class="round-label">Sweet 16</div>
             {% for game in regions["Midwest"]["16"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -902,6 +920,7 @@
           <div class="round-column round-32">
             <div class="round-label">Round 2</div>
             {% for game in regions["Midwest"]["32"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
@@ -944,6 +963,7 @@
           <div class="round-column round-64">
             <div class="round-label">Round 1</div>
             {% for game in regions["Midwest"]["64"] %}
+            <div class="matchup">
             <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
