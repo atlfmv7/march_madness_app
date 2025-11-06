@@ -12,21 +12,24 @@
     crossorigin="anonymous"
   />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
 
   <style>
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #F2F2F2;
       min-height: 100vh;
       transition: background 0.3s ease;
+      font-family: 'Montserrat', sans-serif;
+      color: #333333;
     }
 
-    /* Light mode styles */
+    /* Light mode styles (March Madness doesn't need dark mode variation) */
     body.light-mode {
-      background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+      background: #F2F2F2;
     }
 
     body.light-mode .nav-bar {
-      background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+      background: #0033A0;
     }
 
     body.light-mode .section-card {
@@ -40,8 +43,8 @@
 
     /* Theme toggle button */
     .theme-toggle {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: #FF6600;
+      border: 2px solid white;
       border-radius: 6px;
       padding: 6px 12px;
       color: white;
@@ -51,10 +54,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      font-weight: 700;
     }
 
     .theme-toggle:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: #0033A0;
       transform: scale(1.05);
     }
 
@@ -66,33 +70,36 @@
 
     .section-card {
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 51, 160, 0.15);
       margin-bottom: 30px;
       overflow: hidden;
+      border: 2px solid #0033A0;
     }
 
     .section-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #0033A0;
       color: white;
       padding: 20px 25px;
       font-size: 1.5rem;
-      font-weight: bold;
+      font-weight: 900;
       display: flex;
       align-items: center;
       gap: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .section-header.today {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      background: linear-gradient(135deg, #0033A0 0%, #FF6600 100%);
     }
 
     .section-header.upcoming {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      background: #FF6600;
     }
 
     .section-header.past {
-      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      background: #0033A0;
     }
 
     .region-subsection {
@@ -162,22 +169,25 @@
     }
 
     .game-status-badge.final {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+      background: #0033A0;
+      color: white;
+      border: 2px solid white;
+      font-weight: 800;
     }
 
     .game-status-badge.in-progress {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeeba;
+      background: #FF6600;
+      color: white;
+      border: 2px solid white;
       animation: pulse 2s ease-in-out infinite;
+      font-weight: 800;
     }
 
     .game-status-badge.scheduled {
-      background: #e2e3e5;
-      color: #383d41;
-      border: 1px solid #d6d8db;
+      background: #F2F2F2;
+      color: #333333;
+      border: 2px solid #0033A0;
+      font-weight: 800;
     }
 
     @keyframes pulse {
@@ -189,63 +199,16 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 3px 8px;
-      border-radius: 10px;
+      padding: 4px 10px;
+      border-radius: 4px;
       font-size: 0.7rem;
-      font-weight: 700;
+      font-weight: 900;
       text-transform: uppercase;
-      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      background: #FF6600;
       color: white;
-      border: 1px solid #ff5252;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
-    }
-
-    /* Tournament Insights Cards */
-    .insight-card {
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-      border: 2px solid #e9ecef;
-      text-align: center;
-      transition: all 0.2s ease;
-    }
-
-    .insight-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-      border-color: #dee2e6;
-    }
-
-    .insight-icon {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-
-    .insight-label {
-      font-size: 0.75rem;
-      color: #6c757d;
-      text-transform: uppercase;
+      border: 2px solid #0033A0;
       letter-spacing: 1px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .insight-value {
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: #212529;
-      margin-bottom: 6px;
-    }
-
-    .insight-description {
-      font-size: 0.85rem;
-      color: #6c757d;
-    }
-
-    body.light-mode .insight-card {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 2px 4px rgba(255, 102, 0, 0.4);
     }
 
     /* Team Modal */
@@ -442,10 +405,10 @@
     }
 
     .nav-bar {
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(10px);
+      background: #0033A0;
       padding: 15px 0;
       margin-bottom: 30px;
+      border-bottom: 4px solid #FF6600;
     }
 
     .nav-content {
@@ -461,18 +424,22 @@
 
     .page-title {
       color: white;
-      font-size: 1.5rem;
-      font-weight: bold;
+      font-size: 1.8rem;
+      font-weight: 900;
       margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
     .year-badge {
-      background: rgba(255, 255, 255, 0.2);
+      background: #FF6600;
       color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
+      padding: 6px 14px;
+      border-radius: 4px;
       font-size: 0.9rem;
       margin-left: 10px;
+      font-weight: 800;
+      border: 2px solid white;
     }
 
     /* Participant Standings Table */
@@ -483,13 +450,15 @@
     }
 
     .standings-table th {
-      background: #f8f9fa;
+      background: #0033A0;
       padding: 12px 8px;
       text-align: left;
-      font-weight: 600;
-      color: #495057;
-      border-bottom: 2px solid #dee2e6;
+      font-weight: 800;
+      color: white;
+      border-bottom: 3px solid #FF6600;
       white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .standings-table th.sortable {
@@ -499,37 +468,38 @@
     }
 
     .standings-table th.sortable:hover {
-      background: #e9ecef;
+      background: #00297a;
     }
 
     .standings-table th.sortable .sort-arrow {
       font-size: 0.7rem;
-      color: #adb5bd;
+      color: #FF6600;
       margin-left: 4px;
     }
 
     .standings-table th.sortable.sort-asc .sort-arrow::before {
       content: '▲';
-      color: #667eea;
+      color: #FF6600;
     }
 
     .standings-table th.sortable.sort-desc .sort-arrow::before {
       content: '▼';
-      color: #667eea;
+      color: #FF6600;
     }
 
     .standings-table td {
       padding: 10px 8px;
       border-bottom: 1px solid #e9ecef;
+      font-weight: 600;
     }
 
     .standings-table tr:hover {
-      background: #f8f9fa;
+      background: rgba(255, 102, 0, 0.05);
     }
 
     .leader-row {
-      background: rgba(255, 215, 0, 0.1);
-      font-weight: 600;
+      background: rgba(255, 102, 0, 0.15);
+      font-weight: 700;
     }
 
     .rank-cell {
@@ -672,35 +642,42 @@
     }
 
     .btn-apply-filters {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #FF6600;
       color: white;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 6px;
-      font-weight: 600;
+      border: 2px solid #FF6600;
+      padding: 10px 24px;
+      border-radius: 4px;
+      font-weight: 800;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .btn-apply-filters:hover {
+      background: #0033A0;
+      border-color: #0033A0;
       transform: translateY(-2px);
     }
 
     .btn-clear-filters {
-      color: #6c757d;
+      color: #0033A0;
       text-decoration: none;
-      padding: 8px 20px;
-      border-radius: 6px;
-      border: 1px solid #dee2e6;
+      padding: 10px 24px;
+      border-radius: 4px;
+      border: 2px solid #0033A0;
       background: white;
-      font-weight: 600;
+      font-weight: 800;
       transition: all 0.2s;
       display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .btn-clear-filters:hover {
-      background: #f8f9fa;
-      border-color: #adb5bd;
+      background: #0033A0;
+      color: white;
+      transform: translateY(-2px);
     }
 
     .active-filters {
@@ -779,22 +756,22 @@
     .stat-card {
       flex: 1;
       min-width: 300px;
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-      border-radius: 12px;
+      background: white;
+      border-radius: 8px;
       padding: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      border: 2px solid;
+      box-shadow: 0 2px 8px rgba(0, 51, 160, 0.15);
+      border: 3px solid;
       display: flex;
       align-items: center;
       gap: 15px;
     }
 
     .stat-card.high-score {
-      border-color: #ff6b6b;
+      border-color: #FF6600;
     }
 
     .stat-card.low-score {
-      border-color: #4ecdc4;
+      border-color: #0033A0;
     }
 
     .stat-icon {
@@ -817,17 +794,17 @@
 
     .stat-value {
       font-size: 2rem;
-      font-weight: bold;
-      color: #212529;
+      font-weight: 900;
+      color: #333333;
       margin-bottom: 8px;
     }
 
     .stat-card.high-score .stat-value {
-      color: #dc3545;
+      color: #FF6600;
     }
 
     .stat-card.low-score .stat-value {
-      color: #17a2b8;
+      color: #0033A0;
     }
 
     .stat-info {
@@ -921,11 +898,8 @@
         <span>Participant Standings</span>
       </div>
       <div class="region-subsection">
-        <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="margin-bottom: 15px;">
           <input type="text" id="participantSearch" placeholder="🔍 Search participants..." style="width: 100%; max-width: 400px; padding: 10px 15px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.95rem;">
-          <button onclick="exportStandingsToCSV()" class="btn btn-sm btn-success">
-            📥 Export Standings
-          </button>
         </div>
         <div style="overflow-x: auto;">
           <table class="standings-table">
@@ -1069,64 +1043,6 @@
     </div>
     {% endif %}
 
-    <!-- Additional Tournament Statistics -->
-    {% if games_completed > 0 %}
-    <div class="section-card">
-      <div class="section-header" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #fff;">
-        <span>📈</span>
-        <span>Tournament Insights</span>
-      </div>
-      <div class="region-subsection">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-
-          <!-- Upsets Count -->
-          <div class="insight-card">
-            <div class="insight-icon">🔥</div>
-            <div class="insight-label">Total Upsets</div>
-            <div class="insight-value">{{ upset_count }}</div>
-            <div class="insight-description">Lower seed victories</div>
-          </div>
-
-          <!-- Highest Scoring Round -->
-          {% if highest_scoring_round %}
-          <div class="insight-card">
-            <div class="insight-icon">💯</div>
-            <div class="insight-label">Highest Scoring Round</div>
-            <div class="insight-value">Round of {{ highest_scoring_round.round }}</div>
-            <div class="insight-description">{{ highest_scoring_round.avg }} pts/game avg ({{ highest_scoring_round.games }} games)</div>
-          </div>
-          {% endif %}
-
-          <!-- Best Region Performance -->
-          {% if region_performance %}
-          {% set best_region = region_performance.items() | selectattr('1.alive', 'gt', 0) | sort(attribute='1.alive', reverse=true) | first %}
-          {% if best_region %}
-          <div class="insight-card">
-            <div class="insight-icon">🌎</div>
-            <div class="insight-label">Leading Region</div>
-            <div class="insight-value">{{ best_region[0] }}</div>
-            <div class="insight-description">{{ best_region[1].alive }}/{{ best_region[1].total }} teams alive</div>
-          </div>
-          {% endif %}
-          {% endif %}
-
-          <!-- Best Seed Performance -->
-          {% if seed_performance %}
-          {% set best_seed = seed_performance.items() | sort(attribute='1.pct', reverse=true) | first %}
-          {% if best_seed %}
-          <div class="insight-card">
-            <div class="insight-icon">🎯</div>
-            <div class="insight-label">Top Performing Seed</div>
-            <div class="insight-value">{{ best_seed[0] }} Seed</div>
-            <div class="insight-description">{{ best_seed[1].alive }}/{{ best_seed[1].total }} alive ({{ best_seed[1].pct }}%)</div>
-          </div>
-          {% endif %}
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    {% endif %}
-
     <!-- Filters Section -->
     <div class="section-card">
       <div class="section-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">
@@ -1189,14 +1105,9 @@
     <!-- Today's Games Section -->
     {% if todays_games_by_region %}
     <div class="section-card">
-      <div class="section-header today" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <span>🔥</span>
-          <span>Today's Games</span>
-        </div>
-        <button onclick="exportGamesToCSV('today')" class="btn btn-sm btn-light" style="font-size: 0.8rem;">
-          📥 Export
-        </button>
+      <div class="section-header today">
+        <span>🔥</span>
+        <span>Today's Games</span>
       </div>
       {% for region, games in todays_games_by_region.items() %}
       <div class="region-subsection">
@@ -1284,14 +1195,9 @@
     <!-- Upcoming Games Section -->
     {% if upcoming_games %}
     <div class="section-card">
-      <div class="section-header upcoming" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <span>📅</span>
-          <span>Upcoming Games</span>
-        </div>
-        <button onclick="exportGamesToCSV('upcoming')" class="btn btn-sm btn-light" style="font-size: 0.8rem;">
-          📥 Export
-        </button>
+      <div class="section-header upcoming">
+        <span>📅</span>
+        <span>Upcoming Games</span>
       </div>
       <div class="region-subsection">
         {% for g in upcoming_games %}
@@ -1356,14 +1262,9 @@
     <!-- Past Games Section -->
     {% if past_games %}
     <div class="section-card">
-      <div class="section-header past" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <span>📊</span>
-          <span>Past Games</span>
-        </div>
-        <button onclick="exportGamesToCSV('past')" class="btn btn-sm btn-light" style="font-size: 0.8rem;">
-          📥 Export
-        </button>
+      <div class="section-header past">
+        <span>📊</span>
+        <span>Past Games</span>
       </div>
       <div class="region-subsection">
         {% for g in past_games %}
@@ -1527,133 +1428,6 @@
           if (expandIcon) expandIcon.textContent = '▼';
         }
       }
-    }
-
-    // CSV Export Functions
-    function exportStandingsToCSV() {
-      const table = document.querySelector('.standings-table');
-      if (!table) return;
-
-      const rows = [];
-
-      // Add header row
-      const headers = ['Rank', 'Participant', 'Spread W-L', 'Spread %', 'Teams Alive'];
-      rows.push(headers.join(','));
-
-      // Add data rows (only main rows, not detail rows)
-      const dataRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => {
-        return !row.classList.contains('teams-detail-row');
-      });
-
-      dataRows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 5) {
-          const rank = cells[0].textContent.trim();
-          const participant = cells[1].textContent.trim();
-          const spreadWL = cells[2].textContent.trim();
-          const spreadPct = cells[3].textContent.trim();
-          const teamsAlive = cells[4].textContent.trim().split('\n')[0].trim(); // Remove expand icon
-
-          rows.push([rank, `"${participant}"`, spreadWL, spreadPct, teamsAlive].join(','));
-        }
-      });
-
-      // Create and download CSV
-      const csvContent = rows.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-
-      link.setAttribute('href', url);
-      link.setAttribute('download', `standings_${new Date().toISOString().slice(0,10)}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function exportGamesToCSV(section) {
-      const games = [];
-
-      // Add header row
-      const headers = ['Round', 'Region', 'Status', 'Team 1', 'Team 1 Seed', 'Team 1 Owner', 'Team 1 Score', 'Team 2', 'Team 2 Seed', 'Team 2 Owner', 'Team 2 Score', 'Spread', 'Spread Winner', 'Game Time'];
-      games.push(headers.join(','));
-
-      // Select the appropriate section
-      let sectionElement;
-      if (section === 'today') {
-        sectionElement = document.querySelector('.section-header.today')?.closest('.section-card');
-      } else if (section === 'upcoming') {
-        sectionElement = document.querySelector('.section-header.upcoming')?.closest('.section-card');
-      } else if (section === 'past') {
-        sectionElement = document.querySelector('.section-header.past')?.closest('.section-card');
-      }
-
-      if (!sectionElement) return;
-
-      // Extract game data from cards
-      const gameCards = sectionElement.querySelectorAll('.game-card');
-      gameCards.forEach(card => {
-        const round = card.querySelector('.game-round')?.textContent.trim() || '';
-        const status = card.querySelector('.game-status-badge')?.textContent.replace(/[🟢🟡⚪]/g, '').trim() || '';
-        const gameTime = card.querySelector('.game-time')?.textContent.trim() || '';
-
-        const teamBlocks = card.querySelectorAll('.team-block');
-        const team1Name = teamBlocks[0]?.querySelector('.team-name')?.textContent.trim() || '';
-        const team1Owner = teamBlocks[0]?.querySelector('.team-owner')?.textContent.trim() || '';
-        const team1Score = teamBlocks[0]?.querySelector('.team-score')?.textContent.trim() || '';
-
-        const team2Name = teamBlocks[1]?.querySelector('.team-name')?.textContent.trim() || '';
-        const team2Owner = teamBlocks[1]?.querySelector('.team-owner')?.textContent.trim() || '';
-        const team2Score = teamBlocks[1]?.querySelector('.team-score')?.textContent.trim() || '';
-
-        const spread = card.querySelector('.game-spread')?.textContent.replace('Spread:', '').trim() || '';
-
-        // Extract seeds from team names
-        const team1SeedMatch = team1Name.match(/\((\d+)\)/);
-        const team2SeedMatch = team2Name.match(/\((\d+)\)/);
-        const team1Seed = team1SeedMatch ? team1SeedMatch[1] : '';
-        const team2Seed = team2SeedMatch ? team2SeedMatch[1] : '';
-
-        // Clean team names (remove seed)
-        const team1Clean = team1Name.replace(/\s*\(\d+\)/, '').trim();
-        const team2Clean = team2Name.replace(/\s*\(\d+\)/, '').trim();
-
-        // Extract region from round text
-        const regionMatch = round.match(/([A-Za-z]+)\s*-/);
-        const region = regionMatch ? regionMatch[1] : '';
-        const roundClean = round.replace(/.*Round of /, 'Round of ');
-
-        games.push([
-          `"${roundClean}"`,
-          `"${region}"`,
-          `"${status}"`,
-          `"${team1Clean}"`,
-          team1Seed,
-          `"${team1Owner}"`,
-          team1Score,
-          `"${team2Clean}"`,
-          team2Seed,
-          `"${team2Owner}"`,
-          team2Score,
-          `"${spread}"`,
-          '',
-          `"${gameTime}"`
-        ].join(','));
-      });
-
-      // Create and download CSV
-      const csvContent = games.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${section}_games_${new Date().toISOString().slice(0,10)}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
 
     // Participant search functionality
