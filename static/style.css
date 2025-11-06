@@ -632,6 +632,12 @@ body.bracket-page.light-mode .champion-section {
   transition: background 0.3s ease;
 }
 
+.nav-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
 /* Light mode nav bar */
 body.bracket-page.light-mode .nav-bar {
   background: rgba(255,255,255,0.9);
