@@ -1,0 +1,21 @@
+[Unit]
+Description=March Madness Madness Web Application
+After=network.target
+
+[Service]
+Type=notify
+# UPDATE THESE to match your actual user and installation directory
+User=ryan
+Group=ryan
+WorkingDirectory=/home/ryan/march_madness_app
+Environment="PATH=/home/ryan/march_madness_app/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/ryan/march_madness_app/venv/bin/gunicorn --config gunicorn_config.py app:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

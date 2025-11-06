@@ -12,22 +12,106 @@
     crossorigin="anonymous"
   />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <script>
+    // Auto-redirect mobile/small screens to table view for better UX
+    (function() {
+      // Check if user manually navigated here (via clicking "Visual Bracket" button)
+      const fromTableView = sessionStorage.getItem('viewPreference') === 'bracket';
+
+      // Only redirect if:
+      // 1. Screen is small (< 1024px width)
+      // 2. User didn't manually choose bracket view
+      if (!fromTableView && window.innerWidth < 1024) {
+        // Set flag to prevent redirect when user clicks "Table View" button
+        sessionStorage.setItem('viewPreference', 'table');
+        window.location.href = "{{ url_for('table_view') }}";
+      } else {
+        // Clear preference to allow auto-redirect on next visit
+        sessionStorage.removeItem('viewPreference');
+      }
+    })();
+  </script>
 </head>
 <body class="bracket-page">
   <div class="nav-bar">
-    <div class="container-fluid">
+    <div class="nav-content">
       <div class="d-flex justify-content-between align-items-center">
         <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">← March Madness Madness</a>
+        <a href="{{ url_for('home') }}" class="text-white text-decoration-none fw-bold">March Madness Madness</a>
         <div class="d-flex gap-2">
           <button id="themeToggle" class="theme-toggle" title="Toggle light/dark mode">
             <span id="themeIcon">☀️</span>
           </button>
           <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light">Table View</a>
+          <a href="{{ url_for('table_view') }}" class="btn btn-sm btn-outline-light">Table View</a>
+          {% if is_local %}
           <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Score Ticker -->
+  {% if todays_games %}
+  <div class="score-ticker">
+    <div class="ticker-content">
+      {% for game in todays_games %}
+      <div class="ticker-game">
+        <span class="ticker-status {% if game.status == 'Final' %}final{% elif game.status == 'In Progress' %}live{% endif %}">
+          {{ game.status }}
+        </span>
+        <div class="ticker-matchup">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team1_score > game.team2_score %}live-leader{% endif %}">
+            <span class="ticker-team-name">{{ game.team1.name }}</span>
+            <span class="ticker-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+            <span class="ticker-score">
+              {% if game.team1_score is not none %}{{ game.team1_score }}{% else %}—{% endif %}
+            </span>
+          </div>
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team2_score > game.team1_score %}live-leader{% endif %}">
+            <span class="ticker-team-name">{{ game.team2.name }}</span>
+            <span class="ticker-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+            <span class="ticker-score">
+              {% if game.team2_score is not none %}{{ game.team2_score }}{% else %}—{% endif %}
+            </span>
+          </div>
+        </div>
+        {% if game.spread %}
+        <span class="ticker-spread">{{ game.spread_label() }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <!-- Duplicate content for seamless loop -->
+      {% for game in todays_games %}
+      <div class="ticker-game">
+        <span class="ticker-status {% if game.status == 'Final' %}final{% elif game.status == 'In Progress' %}live{% endif %}">
+          {{ game.status }}
+        </span>
+        <div class="ticker-matchup">
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team1_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team1_score > game.team2_score %}live-leader{% endif %}">
+            <span class="ticker-team-name">{{ game.team1.name }}</span>
+            <span class="ticker-owner">{{ game.team1_owner.name if game.team1_owner else "—" }}</span>
+            <span class="ticker-score">
+              {% if game.team1_score is not none %}{{ game.team1_score }}{% else %}—{% endif %}
+            </span>
+          </div>
+          <div class="ticker-team {% if game.status == 'Final' and game.spread_winner_team_id() == game.team2_id %}spread-winner{% elif game.status == 'In Progress' and game.team1_score is not none and game.team2_score is not none and game.team2_score > game.team1_score %}live-leader{% endif %}">
+            <span class="ticker-team-name">{{ game.team2.name }}</span>
+            <span class="ticker-owner">{{ game.team2_owner.name if game.team2_owner else "—" }}</span>
+            <span class="ticker-score">
+              {% if game.team2_score is not none %}{{ game.team2_score }}{% else %}—{% endif %}
+            </span>
+          </div>
+        </div>
+        {% if game.spread %}
+        <span class="ticker-spread">{{ game.spread_label() }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
   <div class="bracket-wrapper">
     <div class="bracket-header">
@@ -96,6 +180,7 @@
             <div class="round-label">Round 1</div>
             {% for game in regions["East"]["64"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -123,6 +208,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -135,6 +223,7 @@
             <div class="round-label">Round 2</div>
             {% for game in regions["East"]["32"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -162,6 +251,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -174,6 +266,7 @@
             <div class="round-label">Sweet 16</div>
             {% for game in regions["East"]["16"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -201,6 +294,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -213,6 +309,7 @@
             <div class="round-label">Elite 8</div>
             {% for game in regions["East"]["8"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -240,6 +337,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -259,6 +359,7 @@
             <div class="round-label">Round 1</div>
             {% for game in regions["South"]["64"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -286,6 +387,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -298,6 +402,7 @@
             <div class="round-label">Round 2</div>
             {% for game in regions["South"]["32"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -325,6 +430,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -337,6 +445,7 @@
             <div class="round-label">Sweet 16</div>
             {% for game in regions["South"]["16"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -364,6 +473,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -376,6 +488,7 @@
             <div class="round-label">Elite 8</div>
             {% for game in regions["South"]["8"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -403,6 +516,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -422,6 +538,7 @@
             <div class="finals-title">🏆 FINAL FOUR</div>
             {% for game in ff_games %}
             <div class="matchup mb-2">
+            <div class="matchup mb-2" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -449,6 +566,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -483,6 +603,7 @@
           <div class="finals-section">
             <div class="finals-title">CHAMPIONSHIP</div>
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ championship.id }}" data-next-game-id="{{ championship.next_game_id or '' }}" data-next-slot="{{ championship.next_game_slot or '' }}">
               {% if championship.spread %}
               <div class="matchup-spread">{{ championship.spread_label() }}</div>
               {% endif %}
@@ -511,6 +632,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if championship.game_time %}
+              <div class="game-time">{{ short_game_time(championship.game_time) }}</div>
+              {% endif %}
             </div>
           </div>
               {% endif %}
@@ -532,6 +656,7 @@
             <div class="round-label">Elite 8</div>
             {% for game in regions["West"]["8"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -559,6 +684,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -571,6 +699,7 @@
             <div class="round-label">Sweet 16</div>
             {% for game in regions["West"]["16"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -598,6 +727,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -610,6 +742,7 @@
             <div class="round-label">Round 2</div>
             {% for game in regions["West"]["32"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -637,6 +770,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -649,6 +785,7 @@
             <div class="round-label">Round 1</div>
             {% for game in regions["West"]["64"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -676,6 +813,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -695,6 +835,7 @@
             <div class="round-label">Elite 8</div>
             {% for game in regions["Midwest"]["8"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -722,6 +863,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -734,6 +878,7 @@
             <div class="round-label">Sweet 16</div>
             {% for game in regions["Midwest"]["16"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -761,6 +906,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -773,6 +921,7 @@
             <div class="round-label">Round 2</div>
             {% for game in regions["Midwest"]["32"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -800,6 +949,9 @@
               </div>
               {% else %}
               <div class="empty-slot">TBD</div>
+              {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
               {% endif %}
             </div>
             {% endfor %}
@@ -812,6 +964,7 @@
             <div class="round-label">Round 1</div>
             {% for game in regions["Midwest"]["64"] %}
             <div class="matchup">
+            <div class="matchup" data-game-id="{{ game.id }}" data-next-game-id="{{ game.next_game_id or '' }}" data-next-slot="{{ game.next_game_slot or '' }}">
               {% if game.spread %}
               <div class="matchup-spread">{{ game.spread_label() }}</div>
               {% endif %}
@@ -840,6 +993,9 @@
               {% else %}
               <div class="empty-slot">TBD</div>
               {% endif %}
+              {% if game.game_time %}
+              <div class="game-time">{{ short_game_time(game.game_time) }}</div>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -848,6 +1004,9 @@
         {% endif %}
       </div>
     </div>
+
+    <!-- SVG overlay for connector lines -->
+    <svg id="bracket-connectors" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></svg>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -982,6 +1141,93 @@
 
       // Re-align on window resize
       window.addEventListener('resize', alignBracket);
+    })();
+
+    // Bracket connector lines
+    (function() {
+      function drawConnectorLines() {
+        const svg = document.getElementById('bracket-connectors');
+        if (!svg) return;
+
+        // Clear existing lines
+        svg.innerHTML = '';
+
+        // Get bracket-wrapper for positioning context
+        const bracketWrapper = document.querySelector('.bracket-wrapper');
+        if (!bracketWrapper) return;
+
+        const wrapperRect = bracketWrapper.getBoundingClientRect();
+
+        // Find all matchups with next-game relationships
+        const matchups = document.querySelectorAll('.matchup[data-next-game-id]');
+
+        matchups.forEach(matchup => {
+          const nextGameId = matchup.getAttribute('data-next-game-id');
+          const nextSlot = matchup.getAttribute('data-next-slot');
+
+          if (!nextGameId || nextGameId === '') return;
+
+          // Find the next game element
+          const nextGame = document.querySelector(`.matchup[data-game-id="${nextGameId}"]`);
+          if (!nextGame) return;
+
+          // Get positions
+          const fromRect = matchup.getBoundingClientRect();
+          const toRect = nextGame.getBoundingClientRect();
+
+          // Determine if this game is on the left or right side of the bracket
+          const isLeftSide = fromRect.left < wrapperRect.left + wrapperRect.width / 2;
+
+          // Calculate line start point (right side for left games, left side for right games)
+          const startX = isLeftSide
+            ? fromRect.right - wrapperRect.left
+            : fromRect.left - wrapperRect.left;
+          const startY = fromRect.top + fromRect.height / 2 - wrapperRect.top;
+
+          // Calculate line end point (connect to top or bottom of next game based on slot)
+          const endX = isLeftSide
+            ? toRect.left - wrapperRect.left
+            : toRect.right - wrapperRect.left;
+          const endY = nextSlot === '1'
+            ? toRect.top + toRect.height * 0.25 - wrapperRect.top  // Top quarter
+            : toRect.top + toRect.height * 0.75 - wrapperRect.top; // Bottom quarter
+
+          // Create connector line with elbow
+          const midX = (startX + endX) / 2;
+
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const d = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
+          path.setAttribute('d', d);
+          path.setAttribute('stroke', 'var(--connector-color, #cbd5e0)');
+          path.setAttribute('stroke-width', '2');
+          path.setAttribute('fill', 'none');
+          path.setAttribute('class', 'bracket-connector');
+
+          svg.appendChild(path);
+        });
+      }
+
+      // Draw lines after bracket is aligned and ready
+      function initConnectors() {
+        // Wait for bracket alignment to complete
+        setTimeout(() => {
+          drawConnectorLines();
+        }, 100);
+      }
+
+      // Run after page loads
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initConnectors);
+      } else {
+        initConnectors();
+      }
+
+      // Redraw on window resize
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(drawConnectorLines, 150);
+      });
     })();
   </script>
 </body>

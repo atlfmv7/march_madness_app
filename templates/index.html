@@ -1,165 +1,1592 @@
 <!-- templates/index.html -->
-<!--
-  Purpose:
-  - Render the home page with games grouped by region and round.
-  - Provide a compact year selector to filter the view by tournament year.
-  Notes:
-  - Uses Bootstrap via CDN for quick, mobile-friendly styling.
-  - The year dropdown submits a GET form to reload the page with ?year=YYYY.
--->
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>March Madness Madness</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>March Madness Madness - Table View</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap for quick, clean defaults (optional but helpful) -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-    <!-- Our tiny stylesheet (safe to keep empty for now) -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}"
-    />
-  </head>
-  <body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark">
-      <div class="container">
-        <span class="navbar-brand mb-0 h1">March Madness Madness</span>
-        <div>
-          <a href="{{ url_for('bracket') }}" class="btn btn-sm btn-outline-light me-2">Visual Bracket</a>
-          <a href="{{ url_for('admin') }}" class="btn btn-sm btn-outline-light">Admin</a>
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+      min-height: 100vh;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #1a202c;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Light mode styles (kept for compatibility) */
+    body.light-mode {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+
+    body.light-mode .nav-bar {
+      background: white;
+    }
+
+    body.light-mode .section-card {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    body.light-mode .game-card {
+      background: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .content-wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+      margin-bottom: 32px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 51, 160, 0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .section-card:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      background: linear-gradient(135deg, #0033A0 0%, #0041c7 100%);
+      color: white;
+      padding: 24px 32px;
+      font-size: 1.125rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .section-header.today {
+      background: linear-gradient(135deg, #FF6600 0%, #ff8534 100%);
+    }
+
+    .section-header.upcoming {
+      background: linear-gradient(135deg, #0033A0 0%, #0041c7 100%);
+    }
+
+    .section-header.past {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+
+    .region-subsection {
+      border-bottom: 1px solid #e9ecef;
+      padding: 20px 25px;
+    }
+
+    .region-subsection:last-child {
+      border-bottom: none;
+    }
+
+    .region-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .game-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .game-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border-color: #cbd5e1;
+    }
+
+    .game-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .game-round {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .game-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .game-status-badge.final {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .game-status-badge.in-progress {
+      background: #fed7aa;
+      color: #9a3412;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .game-status-badge.scheduled {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .upset-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #FF6600 0%, #ff8534 100%);
+      color: white;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(255, 102, 0, 0.25);
+    }
+
+    /* Team Modal */
+    .team-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      animation: fadeIn 0.2s ease;
+    }
+
+    .team-modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 0;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .team-modal-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 25px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .team-modal-close {
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .team-modal-close:hover {
+      color: #ff6b6b;
+    }
+
+    .team-modal-body {
+      padding: 25px;
+      overflow-y: auto;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .game-time {
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+
+    .matchup-container {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .team-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .team-name {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: #212529;
+    }
+
+    .team-seed {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+
+    .team-owner {
+      color: #6c757d;
+      font-size: 0.85rem;
+    }
+
+    .team-score {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #495057;
+      text-align: center;
+    }
+
+    .team-score.winner {
+      color: #28a745;
+    }
+
+    .vs-divider {
+      text-align: center;
+      color: #adb5bd;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .game-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-scheduled {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .status-live {
+      background: #fff3e0;
+      color: #f57c00;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .status-final {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+
+    .spread-badge {
+      background: #f3e5f5;
+      color: #7b1fa2;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .leader-badge {
+      background: #fff9c4;
+      color: #f57f17;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6c757d;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .nav-bar {
+      background: white;
+      padding: 20px 0;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      border-bottom: 2px solid #0033A0;
+    }
+
+    .nav-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .page-title {
+      color: #0033A0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .year-badge {
+      background: #FF6600;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      margin-left: 12px;
+      font-weight: 600;
+    }
+
+    /* Participant Standings Table */
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .standings-table th {
+      background: #f8fafc;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .standings-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .standings-table th.sortable:hover {
+      background: #e2e8f0;
+      color: #0033A0;
+    }
+
+    .standings-table th.sortable .sort-arrow {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-left: 6px;
+    }
+
+    .standings-table th.sortable.sort-asc .sort-arrow::before {
+      content: '▲';
+      color: #0033A0;
+    }
+
+    .standings-table th.sortable.sort-desc .sort-arrow::before {
+      content: '▼';
+      color: #0033A0;
+    }
+
+    .standings-table td {
+      padding: 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .standings-table tr:hover {
+      background: #f8fafc;
+    }
+
+    .leader-row {
+      background: linear-gradient(90deg, #fff5eb 0%, #ffffff 100%);
+      border-left: 3px solid #FF6600;
+    }
+
+    .leader-row:hover {
+      background: linear-gradient(90deg, #ffedd5 0%, #ffffff 100%);
+    }
+
+    .rank-cell {
+      font-size: 1.2rem;
+      text-align: center;
+      width: 60px;
+    }
+
+    .participant-name {
+      font-weight: 600;
+    }
+
+    .participant-link {
+      color: #667eea;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .participant-link:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+
+    .teams-alive-badge {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .teams-alive-cell.clickable {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .teams-alive-cell.clickable:hover {
+      background-color: #f0f4f8;
+    }
+
+    .expand-icon {
+      font-size: 0.7rem;
+      color: #1976d2;
+    }
+
+    .teams-detail-row {
+      background-color: #f8f9fa;
+    }
+
+    .teams-list-container {
+      padding: 16px;
+    }
+
+    .teams-list-header {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .teams-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .team-item {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .team-seed {
+      color: #6c757d;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .team-name-detail {
+      color: #212529;
+      font-weight: 500;
+    }
+
+    .team-region {
+      color: #6c757d;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+
+    /* Filters Form */
+    .filters-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: flex-end;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 180px;
+    }
+
+    .filter-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-apply-filters {
+      background: #FF6600;
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.9375rem;
+      box-shadow: 0 1px 2px rgba(255, 102, 0, 0.2);
+    }
+
+    .btn-apply-filters:hover {
+      background: #e65c00;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(255, 102, 0, 0.3);
+    }
+
+    .btn-apply-filters:active {
+      transform: translateY(0);
+    }
+
+    .btn-clear-filters {
+      color: #64748b;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-weight: 600;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-block;
+      font-size: 0.9375rem;
+    }
+
+    .btn-clear-filters:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    .active-filters {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter-badge {
+      background: #e7f3ff;
+      color: #1976d2;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .matchup-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .vs-divider {
+        display: none;
+      }
+
+      .team-score {
+        text-align: left;
+      }
+
+      .filters-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-group {
+        min-width: 100%;
+      }
+
+      .filter-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .btn-apply-filters,
+      .btn-clear-filters {
+        width: 100%;
+        text-align: center;
+      }
+
+      .standings-table {
+        font-size: 0.8rem;
+      }
+
+      .standings-table th,
+      .standings-table td {
+        padding: 8px 4px;
+      }
+    }
+
+    /* Tournament Stats */
+    .tournament-stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 0 auto;
+      max-width: 800px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 300px;
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 51, 160, 0.15);
+      border: 3px solid;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .stat-card.high-score {
+      border-color: #FF6600;
+    }
+
+    .stat-card.low-score {
+      border-color: #0033A0;
+    }
+
+    .stat-icon {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .stat-details {
+      flex: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #333333;
+      margin-bottom: 8px;
+    }
+
+    .stat-card.high-score .stat-value {
+      color: #FF6600;
+    }
+
+    .stat-card.low-score .stat-value {
+      color: #0033A0;
+    }
+
+    .stat-info {
+      font-size: 0.85rem;
+      color: #495057;
+      line-height: 1.6;
+    }
+
+    .stat-round {
+      display: inline-block;
+      background: rgba(13, 110, 253, 0.1);
+      color: #0d6efd;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-top: 5px;
+    }
+
+    /* Tournament stats responsive */
+    @media (max-width: 768px) {
+      .tournament-stats {
+        flex-direction: column;
+        max-width: 100%;
+        margin: 0;
+      }
+
+      .stat-card {
+        min-width: 100%;
+        padding: 15px;
+      }
+
+      .stat-icon {
+        font-size: 2rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stat-card {
+        padding: 10px;
+      }
+
+      .stat-icon {
+        font-size: 1.5rem;
+      }
+
+      .stat-value {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <div class="nav-bar">
+    <div class="nav-content">
+      <div>
+        <h1 class="page-title">
+          March Madness Madness
+          <span class="year-badge">{{ selected_year }}</span>
+        </h1>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        {% if years and years|length > 1 %}
+        <form method="get" class="d-inline-block">
+          <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width: 100px;">
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('home') }}" class="btn btn-sm btn-light">Visual Bracket</a>
+        <a href="{{ url_for('admin') }}" class="btn btn-sm btn-light">Admin</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-wrapper">
+    <!-- Participant Standings Dashboard -->
+    {% if participant_standings %}
+    <div class="section-card">
+      <div class="section-header" style="background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);">
+        <span>🏆</span>
+        <span>Participant Standings</span>
+      </div>
+      <div class="region-subsection">
+        <div style="margin-bottom: 15px;">
+          <input type="text" id="participantSearch" placeholder="🔍 Search participants..." style="width: 100%; max-width: 400px; padding: 10px 15px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.95rem;">
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="rank" title="Click to sort">
+                  Rank <span class="sort-arrow"></span>
+                </th>
+                <th class="sortable" data-sort="participant" title="Click to sort">
+                  Participant <span class="sort-arrow"></span>
+                </th>
+                <th class="sortable" data-sort="spread-wins" title="Click to sort">
+                  Spread W-L <span class="sort-arrow"></span>
+                </th>
+                <th class="sortable" data-sort="spread-pct" title="Click to sort">
+                  Spread % <span class="sort-arrow"></span>
+                </th>
+                <th class="sortable" data-sort="teams-alive" title="Click to sort">
+                  Teams Alive <span class="sort-arrow"></span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for standing in participant_standings %}
+              <tr class="{% if loop.index == 1 %}leader-row{% endif %}"
+                  data-participant-id="{{ standing.participant.id }}"
+                  data-rank="{{ loop.index }}"
+                  data-participant-name="{{ standing.participant.name }}"
+                  data-spread-wins="{{ standing.spread_wins }}"
+                  data-spread-pct="{{ standing.spread_win_pct }}"
+                  data-teams-alive="{{ standing.teams_alive }}"
+                  data-total-teams="{{ standing.total_teams }}">
+                <td class="rank-cell">
+                  {% if loop.index == 1 %}🥇
+                  {% elif loop.index == 2 %}🥈
+                  {% elif loop.index == 3 %}🥉
+                  {% else %}{{ loop.index }}
+                  {% endif %}
+                </td>
+                <td class="participant-name">
+                  <a href="?participant={{ standing.participant.id }}&year={{ selected_year }}" class="participant-link">
+                    {{ standing.participant.name }}
+                  </a>
+                </td>
+                <td>{{ standing.spread_wins }}-{{ standing.spread_losses }}</td>
+                <td>{{ standing.spread_win_pct }}%</td>
+                <td class="teams-alive-cell {% if standing.current_teams %}clickable{% endif %}"
+                    onclick="toggleTeamsList({{ standing.participant.id }})"
+                    title="{% if standing.current_teams %}Click to view teams{% endif %}">
+                  <span class="teams-alive-badge">
+                    {{ standing.teams_alive }}/{{ standing.total_teams }}
+                    {% if standing.current_teams %}
+                    <span class="expand-icon">▼</span>
+                    {% endif %}
+                  </span>
+                </td>
+              </tr>
+              {% if standing.current_teams %}
+              <tr class="teams-detail-row" id="teams-row-{{ standing.participant.id }}" style="display: none;">
+                <td colspan="5">
+                  <div class="teams-list-container">
+                    <div class="teams-list-header">Teams Currently Owned:</div>
+                    <div class="teams-list">
+                      {% for team in standing.current_teams %}
+                      <div class="team-item">
+                        <span class="team-seed">({{ team.seed }})</span>
+                        <span class="team-name-detail">{{ team.name }}</span>
+                        <span class="team-region">{{ team.region }}</span>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
-    </nav>
+    </div>
+    {% endif %}
 
-    <main class="container py-4">
-      <!-- Header + Year Selector (compact, submits via GET) -->
-      <div class="d-flex align-items-center justify-content-between mb-3">
-  <div>
-    <h1 class="h4 mb-0">
-      March Madness Madness
-      <span class="badge text-bg-secondary ms-2">{{ selected_year }}</span>
-    </h1>
-    {% if message %}
-      <div class="text-muted small">{{ message }}</div>
+    <!-- Tournament Stats -->
+    {% if high_score or low_score %}
+    <div class="section-card">
+      <div class="section-header" style="background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);">
+        <span>📊</span>
+        <span>Tournament Stats</span>
+      </div>
+      <div class="region-subsection">
+        <div class="tournament-stats">
+          {% if high_score %}
+          <div class="stat-card high-score">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-details">
+              <div class="stat-label">Tournament High Score</div>
+              <div class="stat-value">{{ high_score.score }} points</div>
+              <div class="stat-info">
+                <strong>{{ high_score.team.name }}</strong> (Seed {{ high_score.team.seed }})
+                <br>
+                Owner: <strong>{{ high_score.owner.name if high_score.owner else "Unknown" }}</strong>
+                <br>
+                <span class="stat-round">Round of {{ high_score.round }}</span>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if low_score %}
+          <div class="stat-card low-score">
+            <div class="stat-icon">❄️</div>
+            <div class="stat-details">
+              <div class="stat-label">Tournament Low Score</div>
+              <div class="stat-value">{{ low_score.score }} points</div>
+              <div class="stat-info">
+                <strong>{{ low_score.team.name }}</strong> (Seed {{ low_score.team.seed }})
+                <br>
+                Owner: <strong>{{ low_score.owner.name if low_score.owner else "Unknown" }}</strong>
+                <br>
+                <span class="stat-round">Round of {{ low_score.round }}</span>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Tournament Progress -->
+        {% if total_games %}
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center; color: #6c757d; font-size: 0.9rem;">
+          <strong>Tournament Progress:</strong> {{ games_completed }} of {{ total_games }} games completed
+          {% if games_in_progress > 0 %}
+          • <span style="color: #ffc107;">{{ games_in_progress }} in progress</span>
+          {% endif %}
+          {% if games_scheduled > 0 %}
+          • <span style="color: #6c757d;">{{ games_scheduled }} scheduled</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Filters Section -->
+    <div class="section-card">
+      <div class="section-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">
+        <span>🔍</span>
+        <span>Filters</span>
+      </div>
+      <div class="region-subsection">
+        <form method="get" class="filters-form">
+          <input type="hidden" name="year" value="{{ selected_year }}">
+
+          <div class="filter-group">
+            <label for="region-filter">Region:</label>
+            <select id="region-filter" name="region" class="filter-select">
+              <option value="">All Regions</option>
+              {% for region in available_regions %}
+              <option value="{{ region }}" {% if filter_region == region %}selected{% endif %}>{{ region }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="round-filter">Round:</label>
+            <select id="round-filter" name="round" class="filter-select">
+              <option value="">All Rounds</option>
+              {% for round in available_rounds %}
+              <option value="{{ round }}" {% if filter_round == round %}selected{% endif %}>Round of {{ round }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="participant-filter">Participant:</label>
+            <select id="participant-filter" name="participant" class="filter-select">
+              <option value="">All Participants</option>
+              {% for p in participants %}
+              <option value="{{ p.id }}" {% if filter_participant == p.id|string %}selected{% endif %}>{{ p.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button type="submit" class="btn-apply-filters">Apply Filters</button>
+            <a href="/table?year={{ selected_year }}" class="btn-clear-filters">Clear All</a>
+          </div>
+        </form>
+
+        {% if filter_region or filter_round or filter_participant %}
+        <div class="active-filters">
+          <strong>Active Filters:</strong>
+          {% if filter_region %}<span class="filter-badge">Region: {{ filter_region }}</span>{% endif %}
+          {% if filter_round %}<span class="filter-badge">Round: {{ filter_round }}</span>{% endif %}
+          {% if filter_participant %}
+            <span class="filter-badge">Participant: {{ participants|selectattr('id', 'equalto', filter_participant|int)|map(attribute='name')|first }}</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Today's Games Section -->
+    {% if todays_games_by_region %}
+    <div class="section-card">
+      <div class="section-header today">
+        <span>🔥</span>
+        <span>Today's Games</span>
+      </div>
+      {% for region, games in todays_games_by_region.items() %}
+      <div class="region-subsection">
+        <div class="region-title">
+          <span>📍</span>
+          <span>{{ region }} Region</span>
+        </div>
+        {% for g in games %}
+        <div class="game-card">
+          <div class="game-header">
+            <div class="game-round">Round of {{ g.round }}</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              {% if g.status == "Final" %}
+              <span class="game-status-badge final">🟢 Final</span>
+              {% if g.winner_id and g.team1 and g.team2 %}
+                {% if (g.winner_id == g.team1_id and g.team1.seed > g.team2.seed) or (g.winner_id == g.team2_id and g.team2.seed > g.team1.seed) %}
+                <span class="upset-indicator">🔥 UPSET!</span>
+                {% endif %}
+              {% endif %}
+              {% elif g.status == "In Progress" %}
+              <span class="game-status-badge in-progress">🟡 Live</span>
+              {% else %}
+              <span class="game-status-badge scheduled">⚪ Scheduled</span>
+              {% endif %}
+              {% if g.game_time %}
+              <div class="game-time">{{ format_game_time(g.game_time) }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="matchup-container">
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team1.name if g.team1 else "TBD" }}
+                {% if g.team1 %}
+                <span class="team-seed">({{ g.team1.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team1 %}
+              <div class="team-owner">{{ g.team1_owner.name if g.team1_owner else "—" }}</div>
+              {% endif %}
+              {% if g.team1_score is not none %}
+              <div class="team-score {% if g.status == 'Final' and g.winner_id == g.team1_id %}winner{% endif %}">
+                {{ g.team1_score }}
+              </div>
+              {% endif %}
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team2.name if g.team2 else "TBD" }}
+                {% if g.team2 %}
+                <span class="team-seed">({{ g.team2.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team2 %}
+              <div class="team-owner">{{ g.team2_owner.name if g.team2_owner else "—" }}</div>
+              {% endif %}
+              {% if g.team2_score is not none %}
+              <div class="team-score {% if g.status == 'Final' and g.winner_id == g.team2_id %}winner{% endif %}">
+                {{ g.team2_score }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="game-footer">
+            <div>
+              <span class="status-badge {% if g.status == 'In Progress' %}status-live{% elif g.status == 'Final' %}status-final{% else %}status-scheduled{% endif %}">
+                {{ g.status }}
+              </span>
+              {% if g.spread %}
+              <span class="spread-badge">{{ g.spread_label() }}</span>
+              {% endif %}
+            </div>
+            {% if g._live_owner_leader %}
+            <span class="leader-badge">Leader: {{ g._live_owner_leader.name }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Upcoming Games Section -->
+    {% if upcoming_games %}
+    <div class="section-card">
+      <div class="section-header upcoming">
+        <span>📅</span>
+        <span>Upcoming Games</span>
+      </div>
+      <div class="region-subsection">
+        {% for g in upcoming_games %}
+        <div class="game-card">
+          <div class="game-header">
+            <div class="game-round">{{ g.region }} - Round of {{ g.round }}</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              {% if g.status == "Final" %}
+              <span class="game-status-badge final">🟢 Final</span>
+              {% if g.winner_id and g.team1 and g.team2 %}
+                {% if (g.winner_id == g.team1_id and g.team1.seed > g.team2.seed) or (g.winner_id == g.team2_id and g.team2.seed > g.team1.seed) %}
+                <span class="upset-indicator">🔥 UPSET!</span>
+                {% endif %}
+              {% endif %}
+              {% elif g.status == "In Progress" %}
+              <span class="game-status-badge in-progress">🟡 Live</span>
+              {% else %}
+              <span class="game-status-badge scheduled">⚪ Scheduled</span>
+              {% endif %}
+              {% if g.game_time %}
+              <div class="game-time">{{ format_game_time(g.game_time) }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="matchup-container">
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team1.name if g.team1 else "TBD" }}
+                {% if g.team1 %}
+                <span class="team-seed">({{ g.team1.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team1 %}
+              <div class="team-owner">{{ g.team1_owner.name if g.team1_owner else "—" }}</div>
+              {% endif %}
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team2.name if g.team2 else "TBD" }}
+                {% if g.team2 %}
+                <span class="team-seed">({{ g.team2.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team2 %}
+              <div class="team-owner">{{ g.team2_owner.name if g.team2_owner else "—" }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="game-footer">
+            <span class="status-badge status-scheduled">{{ g.status }}</span>
+            {% if g.spread %}
+            <span class="spread-badge">{{ g.spread_label() }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Past Games Section -->
+    {% if past_games %}
+    <div class="section-card">
+      <div class="section-header past">
+        <span>📊</span>
+        <span>Past Games</span>
+      </div>
+      <div class="region-subsection">
+        {% for g in past_games %}
+        <div class="game-card">
+          <div class="game-header">
+            <div class="game-round">{{ g.region }} - Round of {{ g.round }}</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              {% if g.status == "Final" %}
+              <span class="game-status-badge final">🟢 Final</span>
+              {% if g.winner_id and g.team1 and g.team2 %}
+                {% if (g.winner_id == g.team1_id and g.team1.seed > g.team2.seed) or (g.winner_id == g.team2_id and g.team2.seed > g.team1.seed) %}
+                <span class="upset-indicator">🔥 UPSET!</span>
+                {% endif %}
+              {% endif %}
+              {% elif g.status == "In Progress" %}
+              <span class="game-status-badge in-progress">🟡 Live</span>
+              {% else %}
+              <span class="game-status-badge scheduled">⚪ Scheduled</span>
+              {% endif %}
+              {% if g.game_time %}
+              <div class="game-time">{{ format_game_time(g.game_time) }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="matchup-container">
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team1.name if g.team1 else "TBD" }}
+                {% if g.team1 %}
+                <span class="team-seed">({{ g.team1.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team1 %}
+              <div class="team-owner">{{ g.team1_owner.name if g.team1_owner else "—" }}</div>
+              {% endif %}
+              {% if g.team1_score is not none %}
+              <div class="team-score {% if g.status == 'Final' and g.winner_id == g.team1_id %}winner{% endif %}">
+                {{ g.team1_score }}
+              </div>
+              {% endif %}
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-block">
+              <div class="team-name">
+                {{ g.team2.name if g.team2 else "TBD" }}
+                {% if g.team2 %}
+                <span class="team-seed">({{ g.team2.seed }})</span>
+                {% endif %}
+              </div>
+              {% if g.team2 %}
+              <div class="team-owner">{{ g.team2_owner.name if g.team2_owner else "—" }}</div>
+              {% endif %}
+              {% if g.team2_score is not none %}
+              <div class="team-score {% if g.status == 'Final' and g.winner_id == g.team2_id %}winner{% endif %}">
+                {{ g.team2_score }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="game-footer">
+            <div>
+              <span class="status-badge {% if g.status == 'In Progress' %}status-live{% elif g.status == 'Final' %}status-final{% else %}status-scheduled{% endif %}">
+                {{ g.status }}
+              </span>
+              {% if g.spread %}
+              <span class="spread-badge">{{ g.spread_label() }}</span>
+              {% endif %}
+            </div>
+            {% if g._live_owner_leader %}
+            <span class="leader-badge">Leader: {{ g._live_owner_leader.name }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not todays_games_by_region and not upcoming_games and not past_games %}
+    <div class="section-card">
+      <div class="empty-state">
+        <div class="empty-state-icon">🏀</div>
+        <h3>No Games Found</h3>
+        <p>No games are available for {{ selected_year }}. Try running <code>python seed_data.py</code> to populate the database.</p>
+      </div>
+    </div>
     {% endif %}
   </div>
 
-  {# Show the year selector only if we actually have multiple years #}
-  {% if years and years|length > 1 %}
-    <form method="get" class="d-flex align-items-center gap-2">
-      <label for="year" class="form-label mb-0 me-2">Year:</label>
-      <select id="year" name="year" class="form-select form-select-sm" onchange="this.form.submit()">
-        {% for y in years %}
-          <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
-        {% endfor %}
-      </select>
-      <noscript>
-        <button class="btn btn-sm btn-primary" type="submit">Go</button>
-      </noscript>
-    </form>
-  {% endif %}
-</div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Auto-refresh for live games
+    (function() {
+      // Check if there are any live games on the page
+      const liveGames = document.querySelectorAll('.status-live');
 
+      if (liveGames.length > 0) {
+        console.log(`Found ${liveGames.length} live game(s). Auto-refresh enabled.`);
 
-      {% if grouped %}
-      <!-- Iterate regions (East/West for our seed) -->
-      {% for region, rounds in grouped.items() %}
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header"><strong>Region:</strong> {{ region }}</div>
-        <div class="card-body">
-          <!-- Iterate rounds inside each region -->
-          {% for round_label, games in rounds.items() %}
-          <h2 class="h6 text-uppercase text-muted">
-            Round of {{ round_label }}
-          </h2>
-          <div class="table-responsive mb-3">
-            <table class="table table-sm align-middle games-table">
-              <thead>
-                <tr>
-                  <th>Team 1</th>
-                  <th>Team 2</th>
-                  <th>Spread</th>
-                  <th>Status</th>
-                  <th>Leader vs Spread</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for g in games %}
-                <tr>
-                  <td>
-                    <div class="fw-semibold">
-                      {{ g.team1.name }}
-                      <span class="text-muted">(Seed {{ g.team1.seed }})</span>
-                    </div>
-                    <div class="text-muted small">
-                      Owner: {{ g.team1_owner.name if g.team1_owner else "—" }}
-                    </div>
-                  </td>
-                  <td>
-                    <div class="fw-semibold">
-                      {{ g.team2.name }}
-                      <span class="text-muted">(Seed {{ g.team2.seed }})</span>
-                    </div>
-                    <div class="text-muted small">
-                      Owner: {{ g.team2_owner.name if g.team2_owner else "—" }}
-                    </div>
-                  </td>
-                  <td>
-                    {% if g.spread_label() %}
-                    <span class="badge text-bg-info">{{ g.spread_label() }}</span>
-                    {% else %}
-                    <span class="text-muted">N/A</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <span class="badge text-bg-light">{{ g.status }}</span>
-                    {% if g.score_label() %}
-                    <div class="small text-muted">
-                      Score: {{ g.score_label() }}
-                    </div>
-                    {% endif %}
-                    {% if g.game_time and g.status == "Scheduled" %}
-                    <div class="small text-muted" title="{{ g.game_time }}">
-                      {{ format_game_time(g.game_time) }}
-                    </div>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {% if g.status == "In Progress" and g._live_owner_leader %}
-                    <span class="badge text-bg-success">
-                      {{ g._live_owner_leader.name }}
-                    </span>
-                    {% elif g.status == "In Progress" %}
-                    <span class="text-muted">Calculating…</span>
-                    {% else %}
-                    <span class="text-muted">—</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      {% endfor %}
-      {% else %}
-      <div class="alert alert-warning">
-        No games found. Did you run <code>python seed_data.py</code>?
-      </div>
-      {% endif %}
-    </main>
+        // Show last updated time
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
 
-    <!-- Optional JS (we’ll use this later for auto-refresh, etc.) -->
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-  </body>
+        // Create or update last updated indicator
+        let updateIndicator = document.getElementById('last-updated');
+        if (!updateIndicator) {
+          updateIndicator = document.createElement('div');
+          updateIndicator.id = 'last-updated';
+          updateIndicator.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          `;
+          document.body.appendChild(updateIndicator);
+        }
+
+        // Countdown timer
+        let secondsRemaining = 60;
+        updateIndicator.innerHTML = `🔄 Last updated: ${timeString} | Refreshing in ${secondsRemaining}s`;
+
+        const countdown = setInterval(() => {
+          secondsRemaining--;
+          updateIndicator.innerHTML = `🔄 Last updated: ${timeString} | Refreshing in ${secondsRemaining}s`;
+
+          if (secondsRemaining <= 0) {
+            clearInterval(countdown);
+          }
+        }, 1000);
+
+        // Refresh the page after 60 seconds
+        setTimeout(() => {
+          console.log('Auto-refreshing page for live game updates...');
+          // Preserve current URL parameters when refreshing
+          window.location.reload();
+        }, 60000); // 60 seconds
+      } else {
+        console.log('No live games found. Auto-refresh disabled.');
+      }
+    })();
+
+    // Toggle teams list in standings table
+    function toggleTeamsList(participantId) {
+      const teamsRow = document.getElementById(`teams-row-${participantId}`);
+      const participantRow = document.querySelector(`tr[data-participant-id="${participantId}"]`);
+      const expandIcon = participantRow.querySelector('.expand-icon');
+
+      if (teamsRow) {
+        if (teamsRow.style.display === 'none') {
+          teamsRow.style.display = 'table-row';
+          if (expandIcon) expandIcon.textContent = '▲';
+        } else {
+          teamsRow.style.display = 'none';
+          if (expandIcon) expandIcon.textContent = '▼';
+        }
+      }
+    }
+
+    // Participant search functionality
+    (function() {
+      const searchInput = document.getElementById('participantSearch');
+      if (!searchInput) return;
+
+      const table = document.querySelector('.standings-table');
+      if (!table) return;
+
+      const tbody = table.querySelector('tbody');
+
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+          return !row.classList.contains('teams-detail-row');
+        });
+
+        rows.forEach(row => {
+          const participantName = row.dataset.participantName?.toLowerCase() || '';
+          const detailRow = tbody.querySelector(`#teams-row-${row.dataset.participantId}`);
+
+          if (searchTerm === '' || participantName.includes(searchTerm)) {
+            row.style.display = '';
+            // Keep detail row hidden unless it was already expanded
+            if (detailRow && detailRow.style.display === 'table-row') {
+              detailRow.style.display = 'table-row';
+            } else if (detailRow) {
+              detailRow.style.display = 'none';
+            }
+          } else {
+            row.style.display = 'none';
+            if (detailRow) {
+              detailRow.style.display = 'none';
+            }
+          }
+        });
+      });
+    })();
+
+    // Sortable standings table
+    (function() {
+      const table = document.querySelector('.standings-table');
+      if (!table) return;
+
+      const tbody = table.querySelector('tbody');
+      const headers = table.querySelectorAll('th.sortable');
+      let currentSort = { column: null, direction: null };
+
+      headers.forEach(header => {
+        header.addEventListener('click', () => {
+          const sortKey = header.dataset.sort;
+
+          // Determine sort direction
+          if (currentSort.column === sortKey) {
+            if (currentSort.direction === 'asc') {
+              currentSort.direction = 'desc';
+            } else if (currentSort.direction === 'desc') {
+              currentSort.direction = null;
+              currentSort.column = null;
+            } else {
+              currentSort.direction = 'asc';
+            }
+          } else {
+            currentSort.column = sortKey;
+            currentSort.direction = 'asc';
+          }
+
+          // Update header styles
+          headers.forEach(h => {
+            h.classList.remove('sort-asc', 'sort-desc');
+          });
+
+          if (currentSort.direction) {
+            header.classList.add(`sort-${currentSort.direction}`);
+          }
+
+          // Sort the table
+          sortTable(sortKey, currentSort.direction);
+        });
+      });
+
+      function sortTable(sortKey, direction) {
+        // Get all main rows (not detail rows)
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+          return !row.classList.contains('teams-detail-row');
+        });
+
+        if (!direction) {
+          // Reset to original order (by rank)
+          rows.sort((a, b) => {
+            return parseInt(a.dataset.rank) - parseInt(b.dataset.rank);
+          });
+        } else {
+          rows.sort((a, b) => {
+            let aVal, bVal;
+
+            switch(sortKey) {
+              case 'rank':
+                aVal = parseInt(a.dataset.rank);
+                bVal = parseInt(b.dataset.rank);
+                break;
+              case 'participant':
+                aVal = a.dataset.participantName.toLowerCase();
+                bVal = b.dataset.participantName.toLowerCase();
+                return direction === 'asc'
+                  ? aVal.localeCompare(bVal)
+                  : bVal.localeCompare(aVal);
+              case 'spread-wins':
+                aVal = parseInt(a.dataset.spreadWins);
+                bVal = parseInt(b.dataset.spreadWins);
+                break;
+              case 'spread-pct':
+                aVal = parseFloat(a.dataset.spreadPct);
+                bVal = parseFloat(b.dataset.spreadPct);
+                break;
+              case 'teams-alive':
+                aVal = parseInt(a.dataset.teamsAlive);
+                bVal = parseInt(b.dataset.teamsAlive);
+                break;
+              default:
+                return 0;
+            }
+
+            return direction === 'asc' ? aVal - bVal : bVal - aVal;
+          });
+        }
+
+        // Re-insert rows in sorted order
+        rows.forEach(row => {
+          const participantId = row.dataset.participantId;
+          const detailRow = tbody.querySelector(`#teams-row-${participantId}`);
+
+          tbody.appendChild(row);
+          if (detailRow) {
+            tbody.appendChild(detailRow);
+          }
+        });
+
+        // Update rank display and leader highlighting
+        updateRankDisplay(rows);
+      }
+
+      function updateRankDisplay(sortedRows) {
+        sortedRows.forEach((row, index) => {
+          const rankCell = row.querySelector('.rank-cell');
+          row.classList.remove('leader-row');
+
+          if (currentSort.direction === null || currentSort.column === 'rank') {
+            // Show original ranks with medals
+            const originalRank = parseInt(row.dataset.rank);
+            if (originalRank === 1) {
+              rankCell.textContent = '🥇';
+              row.classList.add('leader-row');
+            } else if (originalRank === 2) {
+              rankCell.textContent = '🥈';
+            } else if (originalRank === 3) {
+              rankCell.textContent = '🥉';
+            } else {
+              rankCell.textContent = originalRank;
+            }
+          } else {
+            // Show current position numbers
+            rankCell.textContent = index + 1;
+            if (index === 0) {
+              row.classList.add('leader-row');
+            }
+          }
+        });
+      }
+    })();
+  </script>
+</body>
 </html>
